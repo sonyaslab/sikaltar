@@ -37,7 +37,8 @@ SessionLocal = sessionmaker(
 
 class Base(DeclarativeBase):
     """Base class untuk semua model SQLAlchemy."""
-    pass
+    #pass
+    __allow_unmapped__ = True
 
 
 def get_db() -> Generator[Session, None, None]:
