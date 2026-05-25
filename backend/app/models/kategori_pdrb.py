@@ -5,7 +5,7 @@ Hierarki: level 1 = kategori, level 2 = subkategori, level 3 = sub-subkategori, 
 """
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -13,6 +13,9 @@ from app.database import Base
 
 class KategoriPdrb(Base):
     __tablename__ = "kategori_pdrb"
+    __table_args__ = (
+        UniqueConstraint('kode', name='uq_kategori_pdrb_kode'),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     kode: Mapped[str] = mapped_column(

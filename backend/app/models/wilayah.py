@@ -5,7 +5,7 @@ Provinsi (65) + 4 Kabupaten + 1 Kota.
 """
 from __future__ import annotations
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -14,6 +14,10 @@ from app.database import Base
 class Wilayah(Base):
     __tablename__ = "wilayah"
 
+    __table_args__ = (
+        UniqueConstraint('kode', name='uq_wilayah_kode'),  # ← WAJIB untuk self-referential FK!
+    )
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     kode: Mapped[str] = mapped_column(String(10), unique=True, nullable=False, index=True,
                                        comment="Kode BPS wilayah, mis: '65', '6501', '6571'")
@@ -24,6 +28,7 @@ class Wilayah(Base):
         String(10),
         ForeignKey("wilayah.kode", ondelete="RESTRICT"),
         nullable=True,
+        unique=False,
         comment="Kode provinsi induk untuk kab/kota; NULL untuk provinsi",
     )
 
