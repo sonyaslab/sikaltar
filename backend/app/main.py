@@ -73,6 +73,7 @@ from app.api.mdm_klasifikasi import router as mdm_klasifikasi_router  # noqa: E4
 from app.api.mdm_satuan import router as mdm_satuan_router         # noqa: E402
 from app.api.mdm_faktor_konversi import router as mdm_faktor_router  # noqa: E402
 from app.api.mdm_audit import router as mdm_audit_router           # noqa: E402
+from app.api.mdm_metode import router as mdm_metode_router         # noqa: E402
 
 app.include_router(referensi_router, prefix="/api", tags=["Referensi"])
 app.include_router(harga_router, prefix="/api/input/harga", tags=["S1.H — Harga"])
@@ -89,6 +90,8 @@ app.include_router(mdm_klasifikasi_router, prefix="/api/mdm/klasifikasi",     ta
 app.include_router(mdm_satuan_router,      prefix="/api/mdm/satuan",          tags=["MDM — Satuan"])
 app.include_router(mdm_faktor_router,      prefix="/api/mdm/faktor-konversi", tags=["MDM — Faktor Konversi"])
 app.include_router(mdm_audit_router,       prefix="/api/mdm/audit",           tags=["MDM — Audit Log"])
+app.include_router(mdm_metode_router,      prefix="/api/mdm/metode",          tags=["MDM — Metode Estimasi"])
+
 
 
 # ─── Frontend Static Files ────────────────────────────────────────────────────

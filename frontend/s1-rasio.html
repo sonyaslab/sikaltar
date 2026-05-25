@@ -90,12 +90,15 @@
         <label for="filter-tahun">Tahun</label>
         <select id="filter-tahun"></select>
         <div class="filter-divider"></div>
-        <label for="filter-berlaku">Berlaku Untuk</label>
-        <select id="filter-berlaku">
-          <option value="ADHB">ADHB</option>
-          <option value="ADHK">ADHK</option>
-          <option value="KEDUANYA">Keduanya</option>
-        </select>
+        <div id="berlaku-filter-wrap" style="display:contents">
+          <label for="filter-berlaku">Berlaku Untuk</label>
+          <select id="filter-berlaku">
+            <option value="ADHB">ADHB</option>
+            <option value="ADHK">ADHK</option>
+            <option value="KEDUANYA">Keduanya</option>
+          </select>
+          <div class="filter-divider"></div>
+        </div>
         <span class="filter-info" id="filter-info"></span>
       </div>
 
@@ -118,7 +121,7 @@
         <div class="table-scroll">
           <table class="lk-table" id="rasio-table">
             <thead>
-              <tr>
+              <tr id="rasio-thead-row">
                 <th class="col-no">No</th>
                 <th style="min-width:280px">Kategori</th>
                 <th class="col-nilai">Nilai Default BPS</th>

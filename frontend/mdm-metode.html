@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metode Estimasi | MDM SIMULTAN</title>
+  <meta name="description" content="Admin MDM — Kelola metode estimasi ADHB/ADHK per kategori lapangan usaha PDRB Kaltara">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN · MDM</div>
+      <div class="brand-sub">Master Data Management</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <a class="mdm-nav-item" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori &amp; Lapangan Usaha</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Klasifikasi KBLI/KBKI</span></a>
+      <a class="mdm-nav-item" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan &amp; Wujud</span></a>
+      <a class="mdm-nav-item" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item active" href="mdm-metode.html"><span class="nav-icon">⚙️</span><span class="nav-label">Metode Estimasi</span></a>
+      <a class="mdm-nav-item" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Dashboard Sistem</span></a>
+    </div>
+  </nav>
+
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>⚙️ Metode Estimasi per Kategori</h1>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="metode-count" style="font-size:0.78rem;color:var(--text-muted)"></span>
+        <button class="btn btn-ghost btn-sm" onclick="loadMetode()" title="Refresh data">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="mdm-body">
+
+      <!-- Info banner -->
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:0.8rem;color:#1E40AF;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:1.1rem;flex-shrink:0">ℹ</span>
+        <div>
+          <strong>Halaman ini hanya menampilkan kategori Level 2 dan 3</strong> — yang memiliki metode estimasi konkrit.
+          Klik tombol <strong>Edit</strong> pada baris untuk mengubah metode ADHB/ADHK atau indeks deflator secara inline.
+          Perubahan metode akan memerlukan konfirmasi dan alasan wajib.
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="mdm-card" style="padding:10px 14px">
+        <div class="mdm-filter-bar">
+          <input id="f-q" placeholder="🔍 Cari nama atau kode kategori..." style="min-width:240px;padding:6px 10px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem" oninput="filterMetode()">
+          <select id="f-level" onchange="filterMetode()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+            <option value="">Semua Level (2 &amp; 3)</option>
+            <option value="2">Level 2 — Subkategori</option>
+            <option value="3">Level 3 — Sub-subkategori</option>
+          </select>
+          <select id="f-metode-adhb" onchange="filterMetode()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+            <option value="">Semua Metode ADHB</option>
+          </select>
+          <select id="f-metode-adhk" onchange="filterMetode()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+            <option value="">Semua Metode ADHK</option>
+          </select>
+          <span id="metode-filter-count" style="font-size:0.78rem;color:var(--text-muted);margin-left:auto"></span>
+        </div>
+      </div>
+
+      <!-- Main table -->
+      <div class="mdm-card">
+        <div style="overflow-x:auto">
+          <table class="mdm-table" id="metode-table">
+            <thead>
+              <tr>
+                <th style="width:40px">No</th>
+                <th style="min-width:100px">Kode</th>
+                <th style="min-width:300px">Kategori / Lapangan Usaha</th>
+                <th style="width:50px;text-align:center">Lvl</th>
+                <th style="min-width:150px">Metode ADHB</th>
+                <th style="min-width:150px">Metode ADHK</th>
+                <th style="min-width:200px">Indeks Deflator Digunakan</th>
+                <th style="width:60px;text-align:center">Komod.</th>
+                <th style="width:70px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="metode-tbody">
+              <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:0.75rem;color:var(--text-muted)">
+        <span><span class="status-badge" style="background:#D1FAE5;color:#065F46;font-size:0.68rem">Produksi</span> Kuantum × Harga Produsen</span>
+        <span><span class="status-badge" style="background:#DBEAFE;color:#1E40AF;font-size:0.68rem">Revaluasi</span> Produksi dengan harga 2010</span>
+        <span><span class="status-badge" style="background:#FEF3C7;color:#92400E;font-size:0.68rem">Deflasi</span> ADHB ÷ Indeks Deflator</span>
+        <span><span class="status-badge" style="background:#F3F4F6;color:#374151;font-size:0.68rem">Double Deflasi</span> Output − KA masing-masing deflasi</span>
+        <span><span class="status-badge" style="background:#EDE9FE;color:#5B21B6;font-size:0.68rem">Commodity Flow</span> Margin perdagangan</span>
+        <span><span class="status-badge" style="background:#FCE7F3;color:#9D174D;font-size:0.68rem">Langsung</span> NTB diinput langsung</span>
+        <span><span class="status-badge" style="background:#FEF2F2;color:#991B1B;font-size:0.68rem">Pengeluaran</span> Realisasi belanja/pendapatan</span>
+      </div>
+
+    </div><!-- /mdm-body -->
+  </div><!-- /mdm-main -->
+</div><!-- /mdm-shell -->
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<!-- Drawer: Edit Metode Inline -->
+<div class="mdm-drawer-overlay" id="metode-overlay" onclick="closeMetodeDrawer()"></div>
+<div class="mdm-drawer" id="metode-drawer">
+  <div class="mdm-drawer-header">
+    <span class="mdm-drawer-title" id="metode-drawer-title">Edit Metode Estimasi</span>
+    <button class="mdm-drawer-close" onclick="closeMetodeDrawer()">&#x2715;</button>
+  </div>
+  <div class="mdm-drawer-body">
+    <input type="hidden" id="metode-edit-kode">
+
+    <!-- Info panel -->
+    <div id="metode-info-panel" style="background:var(--surface-2);border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:0.81rem">
+      <div style="font-weight:700;font-size:0.88rem;margin-bottom:4px" id="metode-info-nama"></div>
+      <div style="color:var(--text-muted)" id="metode-info-kode"></div>
+    </div>
+
+    <!-- Peringatan perubahan metode -->
+    <div class="mdm-warning-banner" id="metode-warning" style="display:none">
+      <div class="icon">⚠️</div>
+      <div class="text"><strong>Konfirmasi Perubahan Metode</strong><br><span id="metode-warning-text"></span></div>
+    </div>
+
+    <div class="mdm-form-row">
+      <div class="mdm-form-group">
+        <label>Metode ADHB <span class="hint">(Atas Dasar Harga Berlaku)</span></label>
+        <select class="mdm-select" id="metode-adhb">
+          <option value="">-- Pilih Metode --</option>
+          <option>Produksi</option><option>Revaluasi</option><option>Deflasi</option>
+          <option>Double Deflasi</option><option>Commodity Flow</option>
+          <option>Langsung</option><option>Pengeluaran</option>
+        </select>
+        <div id="metode-adhb-lama" style="font-size:0.72rem;color:var(--text-muted);margin-top:3px"></div>
+      </div>
+      <div class="mdm-form-group">
+        <label>Metode ADHK <span class="hint">(Atas Dasar Harga Konstan 2010)</span></label>
+        <select class="mdm-select" id="metode-adhk">
+          <option value="">-- Pilih Metode --</option>
+          <option>Produksi</option><option>Revaluasi</option><option>Deflasi</option>
+          <option>Double Deflasi</option><option>Commodity Flow</option>
+          <option>Langsung</option><option>Pengeluaran</option>
+        </select>
+        <div id="metode-adhk-lama" style="font-size:0.72rem;color:var(--text-muted);margin-top:3px"></div>
+      </div>
+    </div>
+
+    <div class="mdm-form-group">
+      <label>Indeks Deflator Digunakan
+        <span class="hint">(isi jika metode ADHK = Deflasi / Double Deflasi)</span>
+      </label>
+      <input class="mdm-input" id="metode-indeks" placeholder="mis: IHK Umum, IHPB Konstruksi, IHK + IHPB">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px">
+        Keterangan deskriptif — tidak mempengaruhi kalkulasi otomatis secara langsung.
+      </div>
+    </div>
+
+    <div class="mdm-form-group" id="metode-alasan-wrap">
+      <label>Alasan Perubahan <span class="required">*</span>
+        <span class="hint">(wajib jika mengubah metode)</span>
+      </label>
+      <textarea class="mdm-textarea" id="metode-alasan" rows="2" placeholder="Jelaskan alasan perubahan metode estimasi..."></textarea>
+    </div>
+
+    <div class="mdm-save-result" id="metode-save-result"></div>
+  </div>
+  <div class="mdm-drawer-footer">
+    <button class="btn btn-ghost" onclick="closeMetodeDrawer()">Batal</button>
+    <button class="btn btn-primary" id="btn-simpan-metode" onclick="saveMetode(false)">Simpan</button>
+    <button class="btn btn-warning" id="btn-konfirmasi-metode" style="display:none" onclick="saveMetode(true)">✓ Ya, Konfirmasi Ubah</button>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  'use strict';
+
+  let _allMetode = [];
+  let _filteredMetode = [];
+  let _editKode = null;
+  let _needsConfirm = false;
+
+  // ── API call ──────────────────────────────────────────────────────
+  function mdmGetMetode(params = {}) {
+    const q = new URLSearchParams({ aktif_only: true, ...params });
+    return _mdmFetch(`/api/mdm/metode?${q}`);
+  }
+  function mdmPatchMetode(kode, data, userNama = 'Admin', confirm = false) {
+    const q = new URLSearchParams({ user_nama: userNama, confirm_metode: confirm });
+    return _mdmFetch(`/api/mdm/metode/${encodeURIComponent(kode)}?${q}`, {
+      method: 'PATCH', body: JSON.stringify(data),
+    });
+  }
+
+  // ── Load & Render ─────────────────────────────────────────────────
+  async function loadMetode() {
+    document.getElementById('metode-tbody').innerHTML =
+      '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">Memuat...</td></tr>';
+    try {
+      const res = await mdmGetMetode();
+      _allMetode = res.rows || [];
+
+      // Populate metode filter dropdowns
+      const metodeSet = new Set(_allMetode.flatMap(r => [r.metode_adhb, r.metode_adhk]).filter(Boolean));
+      ['f-metode-adhb', 'f-metode-adhk'].forEach(selId => {
+        const sel = document.getElementById(selId);
+        const first = sel.options[0];
+        sel.innerHTML = '';
+        sel.appendChild(first);
+        [...metodeSet].sort().forEach(m => {
+          const o = document.createElement('option');
+          o.value = o.textContent = m;
+          sel.appendChild(o);
+        });
+      });
+
+      document.getElementById('metode-count').textContent = `${_allMetode.length} kategori`;
+      filterMetode();
+    } catch (e) {
+      mdmToast('Gagal memuat: ' + e.message, 'error');
+      document.getElementById('metode-tbody').innerHTML =
+        `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">⚠ Gagal memuat data.</td></tr>`;
+    }
+  }
+
+  function filterMetode() {
+    const q = document.getElementById('f-q').value.toLowerCase();
+    const level = document.getElementById('f-level').value;
+    const fAdhb = document.getElementById('f-metode-adhb').value;
+    const fAdhk = document.getElementById('f-metode-adhk').value;
+
+    _filteredMetode = _allMetode.filter(r =>
+      (!q || r.nama.toLowerCase().includes(q) || r.kode.toLowerCase().includes(q)) &&
+      (!level || String(r.level) === level) &&
+      (!fAdhb || r.metode_adhb === fAdhb) &&
+      (!fAdhk || r.metode_adhk === fAdhk)
+    );
+    document.getElementById('metode-filter-count').textContent =
+      `${_filteredMetode.length} dari ${_allMetode.length} ditampilkan`;
+    renderMetode();
+  }
+
+  const METODE_COLOR = {
+    'Produksi':      'background:#D1FAE5;color:#065F46',
+    'Revaluasi':     'background:#DBEAFE;color:#1E40AF',
+    'Deflasi':       'background:#FEF3C7;color:#92400E',
+    'Double Deflasi':'background:#F3F4F6;color:#374151',
+    'Commodity Flow':'background:#EDE9FE;color:#5B21B6',
+    'Langsung':      'background:#FCE7F3;color:#9D174D',
+    'Pengeluaran':   'background:#FEF2F2;color:#991B1B',
+  };
+
+  function metodeBadge(m) {
+    if (!m) return '<span style="color:var(--text-light);font-size:0.75rem">—</span>';
+    const st = METODE_COLOR[m] || 'background:#F3F4F6;color:#374151';
+    return `<span class="status-badge" style="${st};font-size:0.71rem">${m}</span>`;
+  }
+
+  function renderMetode() {
+    const tbody = document.getElementById('metode-tbody');
+    if (!_filteredMetode.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">Tidak ada data</td></tr>';
+      return;
+    }
+    tbody.innerHTML = _filteredMetode.map((r, i) => {
+      const indent = r.level === 3 ? 'padding-left:28px' : '';
+      const fontW  = r.level === 2 ? 'font-weight:600' : '';
+      return `<tr class="level-${r.level}">
+        <td style="text-align:center;color:var(--text-muted);font-size:0.76rem">${i + 1}</td>
+        <td class="mono" style="font-size:0.79rem">${r.kode}</td>
+        <td style="${indent};${fontW};font-size:0.82rem">${r.nama}</td>
+        <td style="text-align:center">
+          <span class="status-badge" style="background:#EFF6FF;color:#1D4ED8;font-size:0.68rem">L${r.level}</span>
+        </td>
+        <td>${metodeBadge(r.metode_adhb)}</td>
+        <td>${metodeBadge(r.metode_adhk)}</td>
+        <td style="font-size:0.78rem;color:var(--text-muted)">
+          ${r.indeks_deflator
+            ? `<span title="${r.indeks_deflator}" style="max-width:180px;display:inline-block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;vertical-align:middle">${r.indeks_deflator}</span>`
+            : (r.metode_adhk === 'Deflasi' || r.metode_adhk === 'Double Deflasi'
+                ? '<span style="color:var(--warn);font-size:0.72rem">⚠ Belum diisi</span>'
+                : '<span style="color:var(--text-light)">—</span>')}
+        </td>
+        <td style="text-align:center;font-size:0.78rem">${r.komoditas_count || 0}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openEditMetode('${r.kode}')">Edit</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Edit Drawer ───────────────────────────────────────────────────
+  function openEditMetode(kode) {
+    const r = _allMetode.find(x => x.kode === kode);
+    if (!r) return;
+    _editKode = kode;
+    _needsConfirm = false;
+
+    document.getElementById('metode-drawer-title').textContent = `Edit Metode — ${kode}`;
+    document.getElementById('metode-info-nama').textContent = r.nama;
+    document.getElementById('metode-info-kode').textContent = `Kode: ${r.kode} · Level ${r.level}`;
+    document.getElementById('metode-adhb').value = r.metode_adhb || '';
+    document.getElementById('metode-adhk').value = r.metode_adhk || '';
+    document.getElementById('metode-indeks').value = r.indeks_deflator || '';
+    document.getElementById('metode-alasan').value = '';
+    document.getElementById('metode-adhb-lama').textContent =
+      r.metode_adhb ? `Saat ini: ${r.metode_adhb}` : 'Belum diisi';
+    document.getElementById('metode-adhk-lama').textContent =
+      r.metode_adhk ? `Saat ini: ${r.metode_adhk}` : 'Belum diisi';
+    document.getElementById('metode-warning').style.display = 'none';
+    document.getElementById('metode-save-result').textContent = '';
+    document.getElementById('metode-save-result').className = 'mdm-save-result';
+    document.getElementById('btn-simpan-metode').style.display = '';
+    document.getElementById('btn-konfirmasi-metode').style.display = 'none';
+
+    document.getElementById('metode-overlay').classList.add('open');
+    document.getElementById('metode-drawer').classList.add('open');
+  }
+
+  function closeMetodeDrawer() {
+    document.getElementById('metode-overlay').classList.remove('open');
+    document.getElementById('metode-drawer').classList.remove('open');
+    _editKode = null;
+    _needsConfirm = false;
+  }
+
+  async function saveMetode(confirm = false) {
+    if (!_editKode) return;
+
+    const data = {
+      metode_adhb:     document.getElementById('metode-adhb').value || null,
+      metode_adhk:     document.getElementById('metode-adhk').value || null,
+      indeks_deflator: document.getElementById('metode-indeks').value.trim() || null,
+      alasan:          document.getElementById('metode-alasan').value.trim() || null,
+    };
+
+    const res = document.getElementById('metode-save-result');
+    res.textContent = '';
+    res.className = 'mdm-save-result';
+
+    try {
+      const result = await mdmPatchMetode(_editKode, data, getMdmUser(), confirm);
+
+      if (result.requires_confirm) {
+        // Tampilkan peringatan, minta konfirmasi
+        document.getElementById('metode-warning').style.display = 'flex';
+        document.getElementById('metode-warning-text').textContent = result.warning;
+        document.getElementById('btn-simpan-metode').style.display = 'none';
+        document.getElementById('btn-konfirmasi-metode').style.display = '';
+        _needsConfirm = true;
+        return;
+      }
+
+      // Sukses
+      res.textContent = `Berhasil disimpan ✓ (${result.changed_columns?.join(', ') || 'tidak ada perubahan'})`;
+      res.className = 'mdm-save-result success show';
+      mdmToast(`Metode ${_editKode} diperbarui`, 'success');
+
+      // Update cache lokal
+      const idx = _allMetode.findIndex(x => x.kode === _editKode);
+      if (idx >= 0) {
+        _allMetode[idx].metode_adhb     = data.metode_adhb || _allMetode[idx].metode_adhb;
+        _allMetode[idx].metode_adhk     = data.metode_adhk || _allMetode[idx].metode_adhk;
+        _allMetode[idx].indeks_deflator = data.indeks_deflator;
+      }
+      filterMetode();
+
+      setTimeout(closeMetodeDrawer, 900);
+    } catch (e) {
+      res.textContent = 'Gagal: ' + e.message;
+      res.className = 'mdm-save-result error show';
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', loadMetode);
+</script>
+</body>
+</html>
