@@ -278,8 +278,8 @@ def sync_recalculate(
             .filter(KategoriPdrb.parent_kode == parent_kode)
             .all()
         )
-        total_b = __class__._sum_ntb_children(db, [k for (k,) in children], wilayah_kode, tahun, triwulan, "adhb")
-        total_k = __class__._sum_ntb_children(db, [k for (k,) in children], wilayah_kode, tahun, triwulan, "adhk")
+        total_b = _sum_ntb_children(db, [k for (k,) in children], wilayah_kode, tahun, triwulan, "adhb")
+        total_k = _sum_ntb_children(db, [k for (k,) in children], wilayah_kode, tahun, triwulan, "adhk")
 
         # Simpan rekap parent
         _save_parent_rekap(db, parent_kode, wilayah_kode, tahun, triwulan, total_b, total_k)
@@ -311,35 +311,35 @@ def sync_recalculate(
     )
     return result
 
-    @staticmethod
-    def _sum_ntb_children(
-        db: Session, child_kodes: list[str], wilayah_kode: str,
-        tahun: int, triwulan: Optional[int], mode: str
-    ) -> dict:
-        """Sum NTB dan komponen dari semua child rekap."""
-        from decimal import Decimal as D
-        totals = {
-            "output_primer": D(0), "output_sekunder": D(0), "output_lainnya": D(0),
-            "output_total": D(0), "ka": D(0), "ntb": D(0),
-        }
-        suffix = f"_adhb" if mode == "adhb" else "_adhk"
-        for kode in child_kodes:
-            row = (
-                db.query(PdrbRekap)
-                .filter(
-                    PdrbRekap.kategori_kode == kode,
-                    PdrbRekap.wilayah_kode == wilayah_kode,
-                    PdrbRekap.tahun == tahun,
-                    PdrbRekap.triwulan == triwulan,
-                )
-                .first()
+
+def _sum_ntb_children(
+    db: Session, child_kodes: list[str], wilayah_kode: str,
+    tahun: int, triwulan: Optional[int], mode: str,
+) -> dict:
+    """Sum NTB dan komponen dari semua child rekap untuk roll-up ke parent."""
+    from decimal import Decimal as D
+    totals = {
+        "output_primer": D(0), "output_sekunder": D(0), "output_lainnya": D(0),
+        "output_total": D(0), "ka": D(0), "ntb": D(0),
+    }
+    suffix = "_adhb" if mode == "adhb" else "_adhk"
+    for kode in child_kodes:
+        row = (
+            db.query(PdrbRekap)
+            .filter(
+                PdrbRekap.kategori_kode == kode,
+                PdrbRekap.wilayah_kode == wilayah_kode,
+                PdrbRekap.tahun == tahun,
+                PdrbRekap.triwulan == triwulan,
             )
-            if row:
-                for k in totals:
-                    val = getattr(row, f"{k}{suffix}", None)
-                    if val is not None:
-                        totals[k] += D(str(val))
-        return totals
+            .first()
+        )
+        if row:
+            for k in totals:
+                val = getattr(row, f"{k}{suffix}", None)
+                if val is not None:
+                    totals[k] += D(str(val))
+    return totals
 
 
 def _save_parent_rekap(
