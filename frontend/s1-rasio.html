@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S1.R — Rasio | SIMULTAN PDRB Kaltara</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/table.css">
+  <style>
+    .rasio-default { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.82rem; }
+    .rasio-override-val { color: var(--primary); font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600; }
+    .override-input {
+      width: 90px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 6px;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      text-align: right;
+      outline: none;
+    }
+    .override-input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-pale); }
+    .override-input.has-override { border-color: var(--primary); background: var(--primary-pale); }
+    .btn-reset-override {
+      padding: 3px 7px;
+      font-size: 0.73rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .btn-reset-override:hover { background: var(--danger-pale); color: var(--danger); border-color: var(--danger); }
+    .pct-display {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="app-name">SIMULTAN</div>
+      <div class="app-sub">LK PDRB Provinsi Kalimantan Utara<br>BPS · Tahun Dasar 2010</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Input S1</div>
+      <a href="s1-harga.html" class="nav-item"><span class="nav-icon">💰</span> S1.H — Harga <span class="nav-badge">S1.H</span></a>
+      <a href="s1-produksi.html" class="nav-item"><span class="nav-icon">🌾</span> S1.P — Produksi <span class="nav-badge">S1.P</span></a>
+      <a href="s1-rasio.html" class="nav-item active"><span class="nav-icon">📊</span> S1.R — Rasio <span class="nav-badge">S1.R</span></a>
+      <a href="s1-deflator.html" class="nav-item"><span class="nav-icon">📉</span> S1.I — Deflator <span class="nav-badge">S1.I</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Hasil</div>
+      <a href="s2-lk.html" class="nav-item"><span class="nav-icon">📊</span> S2 — Lembar Kerja <span class="nav-badge">S2</span></a>
+      <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="page-header">
+      <div>
+        <div class="breadcrumb">S1 — Input Data</div>
+        <h1>S1.R — Rasio (OS · WIP · KA · ADJ)</h1>
+      </div>
+      <div class="header-actions">
+        <span style="font-size:0.78rem;color:var(--text-muted)">
+          🔒 Default BPS &nbsp;·&nbsp; ✏️ Override Lokal
+        </span>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Refresh</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <!-- Tabs OS | WIP | KA | ADJ -->
+      <div class="tabs" id="rasio-tabs">
+        <button class="tab-btn active" data-jenis="OS">Rasio Output Sekunder (OS)</button>
+        <button class="tab-btn" data-jenis="WIP">Rasio WIP</button>
+        <button class="tab-btn" data-jenis="KA">Rasio Konsumsi Antara (KA)</button>
+        <button class="tab-btn" data-jenis="ADJ">Rasio Adjustment (ADJ)</button>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <label for="filter-wilayah">Wilayah</label>
+        <select id="filter-wilayah"></select>
+        <div class="filter-divider"></div>
+        <label for="filter-tahun">Tahun</label>
+        <select id="filter-tahun"></select>
+        <div class="filter-divider"></div>
+        <label for="filter-berlaku">Berlaku Untuk</label>
+        <select id="filter-berlaku">
+          <option value="ADHB">ADHB</option>
+          <option value="ADHK">ADHK</option>
+          <option value="KEDUANYA">Keduanya</option>
+        </select>
+        <span class="filter-info" id="filter-info"></span>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <div class="status-indicator" id="cascade-indicator"></div>
+        <span class="status-text" id="status-text">Siap</span>
+        <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted)" id="last-update"></span>
+      </div>
+
+      <!-- Info banner -->
+      <div style="background:var(--primary-pale);border:1px solid #AED6F1;border-radius:var(--radius);padding:10px 14px;font-size:0.8rem;color:var(--primary)">
+        <strong>ℹ Cara pakai:</strong> Isi kolom <em>Override Lokal</em> untuk mengganti nilai default BPS di wilayah ini.
+        Sebelum menyimpan, klik nama kategori untuk melihat estimasi dampak perubahan NTB.
+        Biarkan kosong untuk menggunakan nilai default nasional.
+      </div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <div class="table-scroll">
+          <table class="lk-table" id="rasio-table">
+            <thead>
+              <tr>
+                <th class="col-no">No</th>
+                <th style="min-width:280px">Kategori</th>
+                <th class="col-nilai">Nilai Default BPS</th>
+                <th class="col-nilai">Override Lokal</th>
+                <th style="width:80px">Status</th>
+                <th style="width:160px">Keterangan</th>
+                <th class="col-action">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="rasio-tbody">
+              <tr><td colspan="7" class="table-empty-msg"><div class="spinner" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Impact Preview Modal -->
+<div id="impact-modal" class="modal-backdrop" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <span>📊</span>
+      <h2>Estimasi Dampak Perubahan Rasio</h2>
+    </div>
+    <div class="modal-body">
+      <div id="impact-modal-content"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel">Batal</button>
+      <button class="btn btn-primary" id="modal-confirm">✓ Simpan Override</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script src="js/sse.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/s1-rasio.js"></script>
+</body>
+</html>

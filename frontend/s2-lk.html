@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S2 — Lembar Kerja PDRB | SIMULTAN Kaltara</title>
+  <meta name="description" content="Lembar Kerja S2 — Hasil Perhitungan PDRB ADHB dan ADHK Kalimantan Utara, format identik BPS">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/s2-lk.css">
+</head>
+<body>
+<div class="lk-shell">
+
+  <!-- ══════════════════════════════════════════════════════════
+       Category Navigation Sidebar
+       ══════════════════════════════════════════════════════════ -->
+  <nav class="cat-sidebar">
+    <div class="cat-sidebar-brand">
+      <div class="app-name">SIMULTAN · S2</div>
+      <div class="app-sub">Lembar Kerja Hasil PDRB</div>
+      <a href="index.html" class="back-link">← Kembali ke Dashboard</a>
+    </div>
+
+    <!-- Filter mini di sidebar -->
+    <div style="padding:10px 12px 6px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <select id="filter-wilayah" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:5px 8px;border-radius:4px;font-size:0.78rem;font-family:var(--font);outline:none;margin-bottom:6px"></select>
+      <div style="display:flex;gap:6px">
+        <select id="filter-tahun" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:5px 6px;border-radius:4px;font-size:0.78rem;font-family:var(--font);outline:none"></select>
+        <select id="filter-triwulan" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:5px 6px;border-radius:4px;font-size:0.78rem;font-family:var(--font);outline:none"></select>
+      </div>
+    </div>
+
+    <div class="cat-nav-section">
+      <div class="cat-nav-label">Navigasi Kategori</div>
+      <div id="cat-nav-container">
+        <!-- Built dynamically by s2-sidebar.js -->
+        <div style="padding:20px 14px;color:rgba(255,255,255,0.3);font-size:0.8rem;text-align:center">
+          <div class="spinner" style="margin:0 auto 8px;border-color:rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6)"></div>
+          Memuat kategori...
+        </div>
+      </div>
+    </div>
+
+    <!-- Status legend at bottom -->
+    <div style="margin-top:auto;padding:10px 14px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.68rem;color:rgba(255,255,255,0.35)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span class="status-dot lengkap"></span>Lengkap (semua terisi)
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span class="status-dot parsial"></span>Parsial (sebagian terisi)
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="status-dot kosong"></span>Kosong (belum ada data)
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Main Worksheet Area
+       ══════════════════════════════════════════════════════════ -->
+  <div class="lk-main">
+
+    <!-- Page Header (sticky) -->
+    <header class="lk-header">
+      <span style="font-weight:700;color:var(--primary);font-size:0.95rem">S2</span>
+      <span class="sep">|</span>
+      <h1 id="ws-kat-title" style="flex:1">Lembar Kerja — Pilih kategori dari sidebar</h1>
+      <span class="lk-info-chip" id="header-info-chip">— · — · —</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:12px">
+        <div class="live-dot" id="live-dot" title="SSE Live"></div>
+        <span style="font-size:0.73rem;color:var(--text-muted)" id="status-text">Siap</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-print" title="Cetak / Simpan PDF">🖨 Cetak</button>
+      <a href="s1-harga.html" class="btn btn-primary btn-sm">← Input S1</a>
+    </header>
+
+    <div class="lk-body">
+
+      <!-- ── Controls Bar ───────────────────────────────────── -->
+      <div class="lk-controls">
+        <!-- Mode toggle -->
+        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600">Tampilkan:</span>
+        <div class="toggle-group">
+          <button class="toggle-btn mode-btn active" data-mode="both">ADHB + ADHK</button>
+          <button class="toggle-btn mode-btn" data-mode="adhb">Hanya ADHB</button>
+          <button class="toggle-btn mode-btn" data-mode="adhk">Hanya ADHK</button>
+          <button class="toggle-btn mode-btn" data-mode="compare">🔀 Bandingkan</button>
+        </div>
+
+        <!-- SSE status -->
+        <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+          <div class="status-indicator" id="cascade-indicator"></div>
+          <span style="font-size:0.75rem;color:var(--text-muted)">Cascade:</span>
+          <span style="font-size:0.75rem" id="cascade-status-text">Siap</span>
+        </div>
+      </div>
+
+      <!-- ── Sheet Title Block ─────────────────────────────── -->
+      <div class="lk-sheet-title">
+        <div id="sheet-title-block">
+          <div class="title-row">
+            <span class="t-label">Wilayah</span>
+            <span class="t-value" id="title-wilayah">—</span>
+          </div>
+          <hr class="t-divider">
+          <div class="title-row">
+            <span class="t-label">Tahun</span>
+            <span class="t-value">—</span>
+            <span style="margin-left:16px" class="t-label">Periode</span>
+            <span class="t-value">—</span>
+          </div>
+        </div>
+        <!-- Meta badges (terisi, NTB, laju) -->
+        <div id="ws-meta" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+
+        <!-- Legend -->
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:0.72rem;color:var(--text-muted);flex-wrap:wrap">
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--row-empty);border:1px solid #F9E79F;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Data tidak lengkap</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#E8F8F5;border:1px solid #A9DFBF;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Baru dihitung (hilang 3 detik)</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--danger-pale);border:1px solid #F5B7B1;border-radius:2px;vertical-align:middle;margin-right:3px"></span>NTB &lt; 0 (anomali)</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--warn-pale);border:1px solid #F9E79F;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Data stale (perlu recalc)</span>
+          <span style="margin-left:auto"><strong>📌 Semua nilai READ-ONLY</strong> — untuk mengubah → kembali ke S1</span>
+        </div>
+      </div>
+
+      <!-- ── Worksheet Tables (ADHB + ADHK) ───────────────── -->
+      <div id="ws-container">
+        <!-- Rendered by s2-lk.js + s2-worksheet.js -->
+        <div class="lk-empty">
+          <div class="icon">📋</div>
+          <h3>Pilih Kategori</h3>
+          <p>Klik salah satu kategori di sidebar kiri untuk menampilkan Lembar Kerja S2.</p>
+        </div>
+      </div>
+
+      <!-- ── Rekap Subkategori ──────────────────────────────── -->
+      <div id="rekap-container">
+        <!-- Rendered by renderRekapSection() -->
+      </div>
+
+    </div><!-- /lk-body -->
+  </div><!-- /lk-main -->
+</div><!-- /lk-shell -->
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Scripts — order matters -->
+<script src="js/api.js"></script>
+<script src="js/sse.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/s2-api.js"></script>
+<script src="js/s2-sidebar.js"></script>
+<script src="js/s2-worksheet.js"></script>
+<script src="js/s2-lk.js"></script>
+
+<script>
+  // Patch status-text and live-dot to use s2 elements
+  // Override updateStatusBar to target s2-specific elements
+  const _origUpdateStatus = updateStatusBar;
+  window.updateStatusBar = function(state, message = '') {
+    // Update cascade indicator
+    const ind = document.getElementById('cascade-indicator');
+    const txt = document.getElementById('cascade-status-text');
+    const liveDot = document.getElementById('live-dot');
+
+    if (ind) {
+      ind.className = 'status-indicator';
+      if (state === 'calculating') { ind.classList.add('calculating'); }
+      else if (state === 'done') { ind.classList.add('done'); }
+    }
+    if (txt) {
+      txt.textContent = state === 'calculating' ? (message || 'Menghitung...') :
+                        state === 'done'         ? 'Selesai ✓' : 'Siap';
+    }
+    // Update SSE live dot
+    if (liveDot) {
+      liveDot.className = 'live-dot' + (state === 'disconnected' ? ' disconnected' : '');
+    }
+    // Also update status-text in header
+    const st = document.getElementById('status-text');
+    if (st) st.textContent = state === 'calculating' ? 'Menghitung...' : state === 'done' ? 'Selesai ✓' : 'Siap';
+  };
+</script>
+</body>
+</html>

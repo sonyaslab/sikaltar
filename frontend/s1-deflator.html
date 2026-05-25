@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S1.I — Indeks Deflator | SIMULTAN PDRB Kaltara</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/table.css">
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="app-name">SIMULTAN</div>
+      <div class="app-sub">LK PDRB Provinsi Kalimantan Utara<br>BPS · Tahun Dasar 2010</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Input S1</div>
+      <a href="s1-harga.html" class="nav-item"><span class="nav-icon">💰</span> S1.H — Harga <span class="nav-badge">S1.H</span></a>
+      <a href="s1-produksi.html" class="nav-item"><span class="nav-icon">🌾</span> S1.P — Produksi <span class="nav-badge">S1.P</span></a>
+      <a href="s1-rasio.html" class="nav-item"><span class="nav-icon">📊</span> S1.R — Rasio <span class="nav-badge">S1.R</span></a>
+      <a href="s1-deflator.html" class="nav-item active"><span class="nav-icon">📉</span> S1.I — Deflator <span class="nav-badge">S1.I</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Hasil</div>
+      <a href="s2-lk.html" class="nav-item"><span class="nav-icon">📊</span> S2 — Lembar Kerja <span class="nav-badge">S2</span></a>
+      <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="page-header">
+      <div>
+        <div class="breadcrumb">S1 — Input Data</div>
+        <h1>S1.I — Indeks Deflator (Basis 2010=100)</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Refresh</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="filter-bar">
+        <label for="filter-wilayah">Wilayah</label>
+        <select id="filter-wilayah"></select>
+        <div class="filter-divider"></div>
+        <label for="filter-tahun">Tahun</label>
+        <select id="filter-tahun"></select>
+        <div class="filter-divider"></div>
+        <label for="filter-triwulan">Periode</label>
+        <select id="filter-triwulan"></select>
+        <span class="filter-info" id="filter-info"></span>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-indicator" id="cascade-indicator"></div>
+        <span class="status-text" id="status-text">Siap</span>
+        <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted)" id="last-update"></span>
+      </div>
+
+      <div style="background:var(--warn-pale);border:1px solid #F9E79F;border-radius:var(--radius);padding:10px 14px;font-size:0.8rem;color:#9A7D0A">
+        <strong>📌 Catatan:</strong> Hanya kategori dengan metode ADHK = <strong>Deflasi</strong> yang dapat diisi.
+        Kategori Produksi dan Revaluasi dihitung otomatis tanpa indeks deflator.
+        Basis indeks = tahun 2010 (nilai = 100,0000).
+      </div>
+
+      <div class="table-container">
+        <div class="table-scroll">
+          <table class="lk-table" id="deflator-table">
+            <thead>
+              <tr>
+                <th class="col-no">No</th>
+                <th style="min-width:280px">Kategori</th>
+                <th style="width:120px">Metode ADHB</th>
+                <th style="width:120px">Metode ADHK</th>
+                <th class="col-nilai">Indeks Deflator</th>
+                <th class="col-nilai">Tahun Lalu</th>
+                <th class="col-pct">Perubahan (%)</th>
+                <th class="col-action">Status</th>
+              </tr>
+            </thead>
+            <tbody id="deflator-tbody">
+              <tr><td colspan="8" class="table-empty-msg"><div class="spinner" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script src="js/sse.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/s1-deflator.js"></script>
+</body>
+</html>

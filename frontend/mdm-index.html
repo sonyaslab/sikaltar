@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Data Management | SIMULTAN Kaltara</title>
+  <meta name="description" content="Admin MDM - kelola komoditas, kategori, kode KBLI, satuan, dan faktor konversi PDRB Kaltara">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN</div>
+      <div class="brand-sub">Sistem LK PDRB Kaltara</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <div class="mdm-nav-section-label">Master Data</div>
+      <a class="mdm-nav-item active" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori & Lapangan Usaha</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Kode Klasifikasi (KBLI/KBKI)</span></a>
+      <a class="mdm-nav-item" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan & Wujud Produksi</span></a>
+      <a class="mdm-nav-item" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <div class="mdm-nav-section-label" style="margin-top:16px">Sistem</div>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Kembali ke Dashboard</span></a>
+    </div>
+  </nav>
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>🏠 Dashboard Master Data Management</h1>
+      <span style="font-size:0.78rem;color:var(--text-muted)" id="admin-user-label">Admin</span>
+    </div>
+    <div class="mdm-body">
+      <div class="mdm-page-header">
+        <div>
+          <div class="mdm-page-title">Master Data Management</div>
+          <div class="mdm-page-sub">Kelola data referensi sistem LK PDRB Kalimantan Utara tanpa menyentuh kode program.</div>
+        </div>
+      </div>
+
+      <!-- Stats Strip -->
+      <div class="mdm-stats-strip" id="mdm-stats">
+        <div class="mdm-stat-card"><div class="mdm-stat-value" id="stat-komoditas">…</div><div class="mdm-stat-label">Komoditas Aktif</div></div>
+        <div class="mdm-stat-card warn"><div class="mdm-stat-value" id="stat-tanpa-kbli">…</div><div class="mdm-stat-label">Tanpa Kode KBLI</div></div>
+        <div class="mdm-stat-card"><div class="mdm-stat-value" id="stat-kategori">…</div><div class="mdm-stat-label">Kategori / Subkategori</div></div>
+        <div class="mdm-stat-card"><div class="mdm-stat-value" id="stat-faktor">…</div><div class="mdm-stat-label">Komoditas Berkonversi</div></div>
+      </div>
+
+      <!-- Module Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+        <a href="mdm-kategori.html" class="mdm-card" style="text-decoration:none;display:block;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow=''">
+          <div class="mdm-card-body" style="padding:20px">
+            <div style="font-size:2rem;margin-bottom:10px">📂</div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Kategori & Lapangan Usaha</div>
+            <div style="font-size:0.79rem;color:var(--text-muted);line-height:1.5">Kelola 17 kategori PDRB beserta subkategori dan metode estimasi ADHB/ADHK.</div>
+            <div style="margin-top:12px;font-size:0.78rem;font-weight:600;color:var(--primary)">Buka →</div>
+          </div>
+        </a>
+        <a href="mdm-komoditas.html" class="mdm-card" style="text-decoration:none;display:block;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow=''">
+          <div class="mdm-card-body" style="padding:20px">
+            <div style="font-size:2rem;margin-bottom:10px">🌾</div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Komoditas</div>
+            <div style="font-size:0.79rem;color:var(--text-muted);line-height:1.5">Tambah, edit, atau nonaktifkan komoditas. Import massal dari file Excel S0.CK BPS.</div>
+            <div style="margin-top:12px;font-size:0.78rem;font-weight:600;color:var(--primary)">Buka →</div>
+          </div>
+        </a>
+        <a href="mdm-klasifikasi.html" class="mdm-card" style="text-decoration:none;display:block;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow=''">
+          <div class="mdm-card-body" style="padding:20px">
+            <div style="font-size:2rem;margin-bottom:10px">🗺️</div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Kode Klasifikasi (KBLI/KBKI/KLUI)</div>
+            <div style="font-size:0.79rem;color:var(--text-muted);line-height:1.5">Sinkronisasi kode antar versi klasifikasi. Gap analysis komoditas tanpa kode.</div>
+            <div style="margin-top:12px;font-size:0.78rem;font-weight:600;color:var(--primary)">Buka →</div>
+          </div>
+        </a>
+        <a href="mdm-satuan.html" class="mdm-card" style="text-decoration:none;display:block;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow=''">
+          <div class="mdm-card-body" style="padding:20px">
+            <div style="font-size:2rem;margin-bottom:10px">📐</div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Satuan & Wujud Produksi</div>
+            <div style="font-size:0.79rem;color:var(--text-muted);line-height:1.5">Master satuan (Ton, M³, Ekor, Barrel...) beserta jumlah komoditas yang menggunakan.</div>
+            <div style="margin-top:12px;font-size:0.78rem;font-weight:600;color:var(--primary)">Buka →</div>
+          </div>
+        </a>
+        <a href="mdm-faktor-konversi.html" class="mdm-card" style="text-decoration:none;display:block;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow=''">
+          <div class="mdm-card-body" style="padding:20px">
+            <div style="font-size:2rem;margin-bottom:10px">⚔️</div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Faktor Konversi</div>
+            <div style="font-size:0.79rem;color:var(--text-muted);line-height:1.5">Update faktor konversi perkebunan (TBS→CPO, Tebu→Gula, dll.) dengan sumber kajian dan audit.</div>
+            <div style="margin-top:12px;font-size:0.78rem;font-weight:600;color:var(--primary)">Buka →</div>
+          </div>
+        </a>
+        <a href="mdm-audit.html" class="mdm-card" style="text-decoration:none;display:block;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow=''">
+          <div class="mdm-card-body" style="padding:20px">
+            <div style="font-size:2rem;margin-bottom:10px">📜</div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Riwayat Perubahan</div>
+            <div style="font-size:0.79rem;color:var(--text-muted);line-height:1.5">Log semua perubahan data master: siapa mengubah apa, kapan, dan mengapa.</div>
+            <div style="margin-top:12px;font-size:0.78rem;font-weight:600;color:var(--primary)">Buka →</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Recent Audit log strip -->
+      <div class="mdm-card">
+        <div class="mdm-card-header">
+          <span class="mdm-card-title">📜 Perubahan Terakhir</span>
+          <a href="mdm-audit.html" style="font-size:0.78rem;color:var(--primary)">Lihat Semua →</a>
+        </div>
+        <div style="padding:0">
+          <table class="mdm-table">
+            <thead><tr>
+              <th>Waktu</th><th>Tabel</th><th>Record</th><th>Aksi</th><th>Kolom Diubah</th><th>User</th>
+            </tr></thead>
+            <tbody id="recent-audit-body">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', async () => {
+    // Load stats
+    try {
+      const stats = await mdmGetKomoditasStats();
+      document.getElementById('stat-komoditas').textContent = stats.total_aktif || 0;
+      const tanpaKbli = stats.tanpa_kbli_2009 || 0;
+      const el = document.getElementById('stat-tanpa-kbli');
+      el.textContent = tanpaKbli;
+      el.closest('.mdm-stat-card').className = 'mdm-stat-card ' + (tanpaKbli > 0 ? 'warn' : '');
+    } catch {}
+
+    try {
+      const kat = await mdmGetKategori({aktif_only: false});
+      document.getElementById('stat-kategori').textContent = kat.length || 0;
+    } catch {}
+
+    try {
+      const fk = await mdmGetFaktorKonversi();
+      document.getElementById('stat-faktor').textContent = fk.length || 0;
+    } catch {}
+
+    // Recent audit
+    try {
+      const audit = await mdmGetAudit({ per_page: 8, page: 1 });
+      const tbody = document.getElementById('recent-audit-body');
+      if (!audit.rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">Belum ada riwayat perubahan</td></tr>';
+      } else {
+        tbody.innerHTML = audit.rows.map(r => `
+          <tr>
+            <td style="font-size:0.76rem;white-space:nowrap">${fmtDate(r.waktu)}</td>
+            <td>${fmtKode(r.tabel_nama)}</td>
+            <td style="font-size:0.78rem">ID: ${r.record_id}</td>
+            <td><span class="status-badge ${r.aksi === 'INSERT' ? 'aktif' : r.aksi === 'NONAKTIFKAN' ? 'nonaktif' : ''}" style="font-size:0.68rem">${r.aksi}</span></td>
+            <td style="font-size:0.76rem">${r.kolom_ubah || '—'}</td>
+            <td style="font-size:0.76rem">${r.user_nama || '—'}</td>
+          </tr>`,).join('');
+      }
+    } catch {}
+  });
+</script>
+</body>
+</html>

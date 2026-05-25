@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kode Klasifikasi KBLI/KBKI/KLUI | MDM SIMULTAN</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN · MDM</div>
+      <div class="brand-sub">Master Data Management</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <a class="mdm-nav-item" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item active" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Klasifikasi KBLI/KBKI</span></a>
+      <a class="mdm-nav-item" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan & Wujud</span></a>
+      <a class="mdm-nav-item" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Dashboard Sistem</span></a>
+    </div>
+  </nav>
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>🗺️ Kode Klasifikasi KBLI/KBKI/KLUI</h1>
+    </div>
+    <div class="mdm-body">
+      <!-- Versi klasifikasi strip -->
+      <div class="mdm-card">
+        <div class="mdm-card-header"><span class="mdm-card-title">Versi Klasifikasi yang Digunakan</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadVersi()">&#8635; Muat Ulang</button>
+        </div>
+        <div style="padding:12px 16px">
+          <table class="mdm-table">
+            <thead><tr><th>Kode Versi</th><th>Nama</th><th>Tahun Terbit</th><th>Berlaku Mulai PDRB</th><th>Status</th></tr></thead>
+            <tbody id="versi-tbody"><tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Mapping / Gap Analysis -->
+      <div class="mdm-card">
+        <div class="mdm-card-header">
+          <div class="mdm-tabs" style="margin:0;border-bottom:none">
+            <button class="mdm-tab-btn active" data-view="mapping" onclick="switchView('mapping')">Tabel Mapping</button>
+            <button class="mdm-tab-btn" data-view="gap" onclick="switchView('gap')">Gap Analysis (⚠)</button>
+          </div>
+          <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+            <select id="versi-select" onchange="loadMapping()" style="padding:5px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.79rem">
+              <option value="kbli_2009">KBLI 2009 (Standar)</option>
+              <option value="kbli_2005">KBLI 2005</option>
+              <option value="klui_1990">KLUI 1990</option>
+              <option value="kbki_2010">KBKI 2010</option>
+            </select>
+          </span>
+        </div>
+        <div id="mapping-view">
+          <div class="mdm-filter-bar">
+            <input id="map-q" placeholder="Cari komoditas..." style="padding:6px 10px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem" oninput="filterMapping()">
+            <select id="map-status" onchange="filterMapping()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+              <option value="">Semua Status</option>
+              <option value="terisi">Terisi</option>
+              <option value="kosong">Belum ada kode</option>
+            </select>
+            <span id="map-count" style="font-size:0.78rem;color:var(--text-muted);margin-left:auto"></span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="mdm-table">
+              <thead><tr>
+                <th>Komoditas</th><th>Kategori</th>
+                <th id="kode-col-header">Kode</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody id="mapping-tbody"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="gap-view" style="display:none">
+          <div style="padding:16px">
+            <div class="mdm-warning-banner">
+              <div class="icon">⚠️</div>
+              <div class="text">Komoditas berikut belum memiliki kode untuk versi yang dipilih. Segera lengkapi untuk keakuratan referensi.</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="mdm-table">
+              <thead><tr><th>ID</th><th>Nama Komoditas</th><th>Kategori</th><th>Aksi</th></tr></thead>
+              <tbody id="gap-tbody"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  let _mappingData = [];
+  let _currentView = 'mapping';
+
+  async function loadVersi() {
+    try {
+      const data = await mdmGetVersi();
+      document.getElementById('versi-tbody').innerHTML = data.map(v => `
+        <tr>
+          <td class="mono">${v.kode_versi}</td>
+          <td>${v.nama_versi}</td>
+          <td class="num">${v.tahun_terbit}</td>
+          <td class="num">${v.berlaku_mulai_pdrb || '—'}</td>
+          <td>${fmtStatus(v.aktif)}</td>
+        </tr>`).join('');
+    } catch (e) { mdmToast('Gagal memuat versi: ' + e.message, 'error'); }
+  }
+
+  async function loadMapping() {
+    const versi = document.getElementById('versi-select').value;
+    document.getElementById('kode-col-header').textContent = versi.replace('_', ' ').toUpperCase();
+    try {
+      _mappingData = await mdmGetMapping(versi);
+      filterMapping();
+    } catch (e) { mdmToast('Gagal: ' + e.message, 'error'); }
+
+    if (_currentView === 'gap') {
+      const gap = await mdmGetGapAnalysis(versi);
+      document.getElementById('gap-tbody').innerHTML = gap.rows.length
+        ? gap.rows.map(r => `
+            <tr>
+              <td class="num">${r.id}</td>
+              <td>${r.nama}</td>
+              <td class="mono">${r.kategori_kode}</td>
+              <td><a href="mdm-komoditas.html?id=${r.id}" class="btn btn-ghost btn-sm">Edit →</a></td>
+            </tr>`).join('')
+        : '<tr><td colspan="4" style="text-align:center;padding:24px;color:#059669">✅ Semua komoditas sudah memiliki kode!</td></tr>';
+    }
+  }
+
+  function filterMapping() {
+    const q = document.getElementById('map-q').value.toLowerCase();
+    const st = document.getElementById('map-status').value;
+    const filtered = _mappingData.filter(r =>
+      (!q || r.nama.toLowerCase().includes(q) || (r.kode || '').toLowerCase().includes(q)) &&
+      (!st || r.status === st)
+    );
+    document.getElementById('map-count').textContent = `${filtered.length} komoditas`;
+    document.getElementById('mapping-tbody').innerHTML = filtered.length
+      ? filtered.map(r => `
+          <tr>
+            <td>${r.nama}</td>
+            <td class="mono">${r.kategori_kode}</td>
+            <td class="mono">${r.kode || '<span style="color:#9CA3AF;font-style:italic">Belum ada</span>'}</td>
+            <td>${r.status === 'terisi'
+              ? '<span class="map-dot ok">✓ Terisi</span>'
+              : '<span class="map-dot empty">○ Kosong</span>'}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Tidak ada data</td></tr>';
+  }
+
+  function switchView(v) {
+    _currentView = v;
+    document.getElementById('mapping-view').style.display = v === 'mapping' ? '' : 'none';
+    document.getElementById('gap-view').style.display = v === 'gap' ? '' : 'none';
+    document.querySelectorAll('.mdm-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+    loadMapping();
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    await loadVersi();
+    await loadMapping();
+  });
+</script>
+</body>
+</html>

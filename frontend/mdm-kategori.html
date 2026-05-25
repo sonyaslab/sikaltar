@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kategori & Lapangan Usaha | MDM SIMULTAN</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN · MDM</div>
+      <div class="brand-sub">Master Data Management</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <a class="mdm-nav-item" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item active" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori & Lapangan Usaha</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Klasifikasi KBLI/KBKI</span></a>
+      <a class="mdm-nav-item" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan & Wujud</span></a>
+      <a class="mdm-nav-item" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Dashboard Sistem</span></a>
+    </div>
+  </nav>
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>📂 Kategori & Lapangan Usaha</h1>
+      <button class="btn btn-primary" onclick="openAddKategori()">+ Tambah Kategori</button>
+    </div>
+    <div class="mdm-body">
+      <div class="mdm-card">
+        <div class="mdm-filter-bar">
+          <input id="f-q" placeholder="🔍 Cari nama atau kode..." style="min-width:220px;padding:6px 10px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem" oninput="filterKategori()">
+          <select id="f-level" onchange="filterKategori()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+            <option value="">Semua Level</option>
+            <option value="1">Level 1 — Kategori Utama</option>
+            <option value="2">Level 2 — Subkategori</option>
+            <option value="3">Level 3 — Sub-subkategori</option>
+          </select>
+          <span id="kat-count" style="font-size:0.78rem;color:var(--text-muted);margin-left:auto"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="mdm-table">
+            <thead><tr>
+              <th style="width:40px">No</th>
+              <th style="min-width:100px">Kode</th>
+              <th style="min-width:280px">Nama Kategori / Lapangan Usaha</th>
+              <th>Level</th>
+              <th>Metode ADHB</th>
+              <th>Metode ADHK</th>
+              <th class="num">Komoditas</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr></thead>
+            <tbody id="kat-tbody">
+              <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer: Edit/Add Kategori -->
+<div class="mdm-drawer-overlay" id="kat-overlay"></div>
+<div class="mdm-drawer" id="kat-drawer">
+  <div class="mdm-drawer-header">
+    <span class="mdm-drawer-title" id="kat-drawer-title">Tambah Kategori</span>
+    <button class="mdm-drawer-close" onclick="closeDrawer('kat-drawer','kat-overlay')">&#x2715;</button>
+  </div>
+  <div class="mdm-drawer-body">
+    <input type="hidden" id="kat-edit-kode">
+    <div class="mdm-warning-banner" id="kat-metode-warning" style="display:none">
+      <div class="icon">⚠️</div>
+      <div class="text"><strong>Perubahan Metode Estimasi</strong><br><span id="kat-metode-warning-text"></span></div>
+    </div>
+    <div class="mdm-form-row">
+      <div class="mdm-form-group">
+        <label>Kode <span class="required">*</span> <span class="hint">(mis: 1.1.c)</span></label>
+        <input class="mdm-input" id="kat-kode" placeholder="1.1.c">
+      </div>
+      <div class="mdm-form-group">
+        <label>Level <span class="required">*</span></label>
+        <select class="mdm-select" id="kat-level">
+          <option value="1">1 — Kategori Utama</option>
+          <option value="2">2 — Subkategori</option>
+          <option value="3" selected>3 — Sub-subkategori</option>
+          <option value="4">4 — Komoditas</option>
+        </select>
+      </div>
+    </div>
+    <div class="mdm-form-group">
+      <label>Nama Kategori <span class="required">*</span></label>
+      <input class="mdm-input" id="kat-nama" placeholder="Nama lengkap lapangan usaha">
+    </div>
+    <div class="mdm-form-group">
+      <label>Parent Kode <span class="hint">(kosong jika level 1)</span></label>
+      <select class="mdm-select" id="kat-parent"><option value="">-- Tidak ada parent --</option></select>
+    </div>
+    <div class="mdm-form-row">
+      <div class="mdm-form-group">
+        <label>Metode ADHB</label>
+        <select class="mdm-select" id="kat-metode-adhb">
+          <option value="">-- Pilih Metode --</option>
+          <option>Produksi</option><option>Revaluasi</option><option>Deflasi</option>
+          <option>Double Deflasi</option><option>Commodity Flow</option>
+          <option>Langsung</option><option>Pengeluaran</option>
+        </select>
+      </div>
+      <div class="mdm-form-group">
+        <label>Metode ADHK</label>
+        <select class="mdm-select" id="kat-metode-adhk">
+          <option value="">-- Pilih Metode --</option>
+          <option>Produksi</option><option>Revaluasi</option><option>Deflasi</option>
+          <option>Double Deflasi</option><option>Commodity Flow</option>
+          <option>Langsung</option><option>Pengeluaran</option>
+        </select>
+      </div>
+    </div>
+    <div class="mdm-form-row">
+      <div class="mdm-form-group">
+        <label>Berlaku Mulai (Tahun)</label>
+        <input class="mdm-input" id="kat-berlaku-mulai" type="number" placeholder="mis: 2010">
+      </div>
+      <div class="mdm-form-group">
+        <label>Berlaku Sampai (Tahun)</label>
+        <input class="mdm-input" id="kat-berlaku-sampai" type="number" placeholder="kosong = masih aktif">
+      </div>
+    </div>
+    <div class="mdm-form-group">
+      <label>Urutan Tampil</label>
+      <input class="mdm-input" id="kat-urutan" type="number" placeholder="999">
+    </div>
+    <div class="mdm-form-group">
+      <label>Keterangan</label>
+      <textarea class="mdm-textarea" id="kat-keterangan" placeholder="Catatan tambahan"></textarea>
+    </div>
+    <div class="mdm-form-group">
+      <label>Alasan Perubahan <span class="hint">(wajib jika ubah metode)</span></label>
+      <input class="mdm-input" id="kat-alasan" placeholder="Jelaskan alasan">
+    </div>
+    <div class="mdm-save-result" id="kat-save-result"></div>
+  </div>
+  <div class="mdm-drawer-footer">
+    <button class="btn btn-ghost" onclick="closeDrawer('kat-drawer','kat-overlay')">Batal</button>
+    <button class="btn btn-danger" id="btn-nonaktifkan-kat" style="display:none" onclick="nonaktifkanKategori()">Nonaktifkan</button>
+    <button class="btn btn-primary" onclick="saveKategori()">Simpan</button>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  let _allKat = [];
+  let _filtered = [];
+  let _editKode = null;
+  let _pendingConfirmMetode = false;
+
+  async function loadKategori() {
+    try {
+      _allKat = await mdmGetKategori({ aktif_only: false });
+      // Populate parent dropdown
+      const sel = document.getElementById('kat-parent');
+      sel.innerHTML = '<option value="">-- Tidak ada parent --</option>';
+      _allKat.filter(k => k.level < 3).forEach(k => {
+        const o = document.createElement('option');
+        o.value = k.kode; o.textContent = `${k.kode} — ${k.nama}`;
+        sel.appendChild(o);
+      });
+      filterKategori();
+    } catch (e) { mdmToast('Gagal memuat kategori: ' + e.message, 'error'); }
+  }
+
+  function filterKategori() {
+    const q = document.getElementById('f-q').value.toLowerCase();
+    const level = document.getElementById('f-level').value;
+    _filtered = _allKat.filter(k =>
+      (!q || k.nama.toLowerCase().includes(q) || k.kode.toLowerCase().includes(q)) &&
+      (!level || String(k.level) === level)
+    );
+    renderKategori();
+  }
+
+  function renderKategori() {
+    document.getElementById('kat-count').textContent = `${_filtered.length} dari ${_allKat.length} kategori`;
+    const tbody = document.getElementById('kat-tbody');
+    if (!_filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">Tidak ada data</td></tr>';
+      return;
+    }
+    tbody.innerHTML = _filtered.map((k, i) => {
+      const indent = k.level === 2 ? 'padding-left:20px' : k.level >= 3 ? 'padding-left:38px' : '';
+      return `<tr class="level-${k.level} ${k.aktif === false ? 'inactive' : ''}">
+        <td style="text-align:center;color:var(--text-muted);font-size:0.76rem">${i+1}</td>
+        <td class="mono">${k.kode}</td>
+        <td style="${indent};font-weight:${k.level===1?700:k.level===2?600:400}">${k.nama}</td>
+        <td style="text-align:center"><span class="status-badge" style="background:#EFF6FF;color:#1D4ED8;font-size:0.68rem">L${k.level}</span></td>
+        <td style="font-size:0.76rem">${k.metode_adhb || '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="font-size:0.76rem">${k.metode_adhk || '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td class="num">${k.komoditas_count || 0}</td>
+        <td>${k.aktif === false ? '<span class="status-badge nonaktif">Nonaktif</span>' : '<span class="status-badge aktif">Aktif</span>'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openEditKategori('${k.kode}')">Edit</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openAddKategori() {
+    _editKode = null;
+    document.getElementById('kat-drawer-title').textContent = 'Tambah Kategori Baru';
+    ['kat-kode','kat-nama','kat-berlaku-mulai','kat-berlaku-sampai','kat-keterangan','kat-alasan'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('kat-metode-adhb').value = '';
+    document.getElementById('kat-metode-adhk').value = '';
+    document.getElementById('kat-urutan').value = '999';
+    document.getElementById('kat-kode').disabled = false;
+    document.getElementById('btn-nonaktifkan-kat').style.display = 'none';
+    document.getElementById('kat-metode-warning').style.display = 'none';
+    openDrawer('kat-drawer', 'kat-overlay');
+  }
+
+  function openEditKategori(kode) {
+    const k = _allKat.find(x => x.kode === kode);
+    if (!k) return;
+    _editKode = kode;
+    document.getElementById('kat-drawer-title').textContent = `Edit: ${kode} — ${k.nama}`;
+    document.getElementById('kat-kode').value = k.kode;
+    document.getElementById('kat-kode').disabled = true;
+    document.getElementById('kat-nama').value = k.nama;
+    document.getElementById('kat-level').value = k.level;
+    document.getElementById('kat-parent').value = k.parent_kode || '';
+    document.getElementById('kat-metode-adhb').value = k.metode_adhb || '';
+    document.getElementById('kat-metode-adhk').value = k.metode_adhk || '';
+    document.getElementById('kat-urutan').value = k.urutan || 999;
+    document.getElementById('kat-berlaku-mulai').value = k.berlaku_mulai || '';
+    document.getElementById('kat-berlaku-sampai').value = k.berlaku_sampai || '';
+    document.getElementById('kat-keterangan').value = k.keterangan || '';
+    document.getElementById('kat-alasan').value = '';
+    document.getElementById('kat-metode-warning').style.display = 'none';
+    document.getElementById('btn-nonaktifkan-kat').style.display = k.level > 1 ? '' : 'none';
+    openDrawer('kat-drawer', 'kat-overlay');
+  }
+
+  async function saveKategori() {
+    const kode = document.getElementById('kat-kode').value.trim();
+    const data = {
+      kode, nama: document.getElementById('kat-nama').value.trim(),
+      level: parseInt(document.getElementById('kat-level').value),
+      parent_kode: document.getElementById('kat-parent').value || null,
+      metode_adhb: document.getElementById('kat-metode-adhb').value || null,
+      metode_adhk: document.getElementById('kat-metode-adhk').value || null,
+      urutan: parseInt(document.getElementById('kat-urutan').value) || 999,
+      berlaku_mulai: parseInt(document.getElementById('kat-berlaku-mulai').value) || null,
+      berlaku_sampai: parseInt(document.getElementById('kat-berlaku-sampai').value) || null,
+      keterangan: document.getElementById('kat-keterangan').value.trim() || null,
+      alasan: document.getElementById('kat-alasan').value.trim() || null,
+    };
+    const res = document.getElementById('kat-save-result');
+    try {
+      let result;
+      if (_editKode) {
+        result = await mdmUpdateKategori(_editKode, data, getMdmUser(), _pendingConfirmMetode);
+        if (result.requires_confirm) {
+          document.getElementById('kat-metode-warning').style.display = 'flex';
+          document.getElementById('kat-metode-warning-text').textContent = result.warning;
+          _pendingConfirmMetode = true; return;
+        }
+      } else {
+        result = await mdmCreateKategori(data, getMdmUser());
+      }
+      _pendingConfirmMetode = false;
+      res.textContent = 'Berhasil disimpan ✓'; res.className = 'mdm-save-result success show';
+      mdmToast('Kategori berhasil disimpan', 'success');
+      setTimeout(() => closeDrawer('kat-drawer', 'kat-overlay'), 800);
+      await loadKategori();
+    } catch (e) {
+      res.textContent = 'Gagal: ' + e.message; res.className = 'mdm-save-result error show';
+    }
+  }
+
+  function nonaktifkanKategori() {
+    if (!_editKode) return;
+    const k = _allKat.find(x => x.kode === _editKode);
+    if (!k) return;
+    mdmConfirmWithReason({
+      title: `Nonaktifkan: ${_editKode}`,
+      message: `Yakin ingin menonaktifkan kategori <strong>${k.nama}</strong>?<br>Komoditas aktif di dalamnya harus dipindahkan terlebih dahulu.`,
+      requireReason: true,
+      onConfirm: async (reason) => {
+        try {
+          await mdmDeleteKategori(_editKode, reason, getMdmUser());
+          mdmToast(`Kategori ${_editKode} dinonaktifkan`, 'success');
+          closeDrawer('kat-drawer', 'kat-overlay');
+          await loadKategori();
+        } catch (e) { mdmToast('Gagal: ' + e.message, 'error'); }
+      },
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', loadKategori);
+</script>
+</body>
+</html>

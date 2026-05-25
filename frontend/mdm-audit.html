@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Perubahan Master | MDM SIMULTAN</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN · MDM</div>
+      <div class="brand-sub">Master Data Management</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <a class="mdm-nav-item" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Klasifikasi KBLI/KBKI</span></a>
+      <a class="mdm-nav-item" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan & Wujud</span></a>
+      <a class="mdm-nav-item" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item active" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Dashboard Sistem</span></a>
+    </div>
+  </nav>
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>📜 Riwayat Perubahan Master</h1>
+      <button class="btn btn-ghost" onclick="mdmExportAudit(_currentFilter)">&#8595; Export CSV</button>
+    </div>
+    <div class="mdm-body">
+      <!-- Filters -->
+      <div class="mdm-card">
+        <div class="mdm-filter-bar">
+          <input class="" id="f-q" placeholder="🔍 Cari kolom / nilai..." style="min-width:180px;padding:6px 10px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem" oninput="debouncedLoad()">
+          <select id="f-tabel" onchange="loadAudit()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+            <option value="">Semua Tabel</option>
+            <option value="komoditas">Komoditas</option>
+            <option value="kategori_pdrb">Kategori PDRB</option>
+            <option value="master_satuan">Satuan</option>
+            <option value="master_versi">Versi Klasifikasi</option>
+          </select>
+          <select id="f-aksi" onchange="loadAudit()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+            <option value="">Semua Aksi</option>
+            <option value="INSERT">INSERT</option>
+            <option value="UPDATE">UPDATE</option>
+            <option value="NONAKTIFKAN">NONAKTIFKAN</option>
+          </select>
+          <input type="date" id="f-dari" onchange="loadAudit()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+          <input type="date" id="f-sampai" onchange="loadAudit()" style="padding:6px 8px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem">
+          <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Reset</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="mdm-table">
+            <thead><tr>
+              <th style="width:140px">Waktu</th>
+              <th>Tabel</th>
+              <th>Record ID</th>
+              <th>Aksi</th>
+              <th>Kolom Diubah</th>
+              <th>Nilai Lama</th>
+              <th>Nilai Baru</th>
+              <th>User</th>
+              <th>Alasan</th>
+            </tr></thead>
+            <tbody id="audit-tbody">
+              <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mdm-pagination" id="audit-pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  let _currentFilter = {};
+  let _page = 1;
+  let _debounceTimer = null;
+
+  function debouncedLoad() {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(() => { _page = 1; loadAudit(); }, 400);
+  }
+
+  async function loadAudit() {
+    _currentFilter = {
+      q:      document.getElementById('f-q').value.trim() || undefined,
+      tabel:  document.getElementById('f-tabel').value || undefined,
+      aksi:   document.getElementById('f-aksi').value || undefined,
+      dari:   document.getElementById('f-dari').value || undefined,
+      sampai: document.getElementById('f-sampai').value || undefined,
+      page:   _page, per_page: 50,
+    };
+    Object.keys(_currentFilter).forEach(k => _currentFilter[k] === undefined && delete _currentFilter[k]);
+
+    const tbody = document.getElementById('audit-tbody');
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;color:var(--text-muted)">Memuat…</td></tr>';
+    try {
+      const data = await mdmGetAudit(_currentFilter);
+      if (!data.rows.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">Tidak ada data sesuai filter</td></tr>';
+      } else {
+        const AKSI_COLOR = { INSERT:'aktif', UPDATE:'', NONAKTIFKAN:'nonaktif' };
+        tbody.innerHTML = data.rows.map(r => `
+          <tr>
+            <td style="font-size:0.73rem;white-space:nowrap">${fmtDate(r.waktu)}</td>
+            <td>${fmtKode(r.tabel_nama)}</td>
+            <td class="num">${r.record_id}</td>
+            <td><span class="status-badge ${AKSI_COLOR[r.aksi] || ''}" style="font-size:0.68rem">${r.aksi}</span></td>
+            <td class="mono" style="font-size:0.76rem">${r.kolom_ubah || '—'}</td>
+            <td style="font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis"><span class="diff-cell-old">${r.nilai_lama || '—'}</span></td>
+            <td style="font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis"><span class="diff-cell-new">${r.nilai_baru || '—'}</span></td>
+            <td style="font-size:0.76rem">${r.user_nama || '—'}</td>
+            <td style="font-size:0.74rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted)">${r.alasan || '—'}</td>
+          </tr>`).join('');
+      }
+      // Pagination
+      const total = data.total;
+      const totalPages = Math.ceil(total / 50);
+      const pg = document.getElementById('audit-pagination');
+      pg.innerHTML = `<span class="pg-info">Total: ${total} entri</span>`
+        + (totalPages > 1 ? `
+          <button class="mdm-page-btn" onclick="changePage(${_page-1})" ${_page===1?'disabled':''}>&#8249;</button>
+          <span style="font-size:0.78rem">Hal ${_page} / ${totalPages}</span>
+          <button class="mdm-page-btn" onclick="changePage(${_page+1})" ${_page>=totalPages?'disabled':''}>&#8250;</button>` : '');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--danger)">${e.message}</td></tr>`;
+    }
+  }
+
+  function changePage(p) { _page = p; loadAudit(); }
+  function clearFilters() {
+    ['f-q','f-tabel','f-aksi','f-dari','f-sampai'].forEach(id => document.getElementById(id).value = '');
+    _page = 1; loadAudit();
+  }
+
+  window.addEventListener('DOMContentLoaded', loadAudit);
+</script>
+</body>
+</html>

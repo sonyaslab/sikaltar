@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faktor Konversi | MDM SIMULTAN</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN · MDM</div>
+      <div class="brand-sub">Master Data Management</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <a class="mdm-nav-item" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Klasifikasi KBLI/KBKI</span></a>
+      <a class="mdm-nav-item" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan & Wujud</span></a>
+      <a class="mdm-nav-item active" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Dashboard Sistem</span></a>
+    </div>
+  </nav>
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>⚔️ Faktor Konversi Perkebunan</h1>
+    </div>
+    <div class="mdm-body">
+      <div class="mdm-warning-banner">
+        <div class="icon">⚠️</div>
+        <div class="text"><strong>Penting:</strong> Mengubah faktor konversi akan mempengaruhi perhitungan Output Primer mulai tahun yang ditentukan. Data historis sebelum tahun tersebut TIDAK dihitung ulang secara otomatis. Gunakan tombol "Hitung Ulang Historis" jika diperlukan.</div>
+      </div>
+      <div class="mdm-card">
+        <div class="mdm-filter-bar">
+          <input id="fk-q" placeholder="🔍 Cari komoditas..." style="padding:6px 10px;border:1px solid #D1D5DB;border-radius:4px;font-size:0.81rem" oninput="filterFaktor()">
+          <span id="fk-count" style="font-size:0.78rem;color:var(--text-muted);margin-left:auto"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="mdm-table">
+            <thead><tr>
+              <th style="width:40px">No</th>
+              <th>Komoditas</th>
+              <th>Bahan Baku</th>
+              <th>Produk Jadi</th>
+              <th class="num">Faktor (%)</th>
+              <th>Berlaku Mulai</th>
+              <th>Aksi</th>
+            </tr></thead>
+            <tbody id="fk-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer: Edit Faktor -->
+<div class="mdm-drawer-overlay" id="fk-overlay"></div>
+<div class="mdm-drawer" id="fk-drawer">
+  <div class="mdm-drawer-header">
+    <span class="mdm-drawer-title" id="fk-drawer-title">Edit Faktor Konversi</span>
+    <button class="mdm-drawer-close" onclick="closeDrawer('fk-drawer','fk-overlay')">&#x2715;</button>
+  </div>
+  <div class="mdm-drawer-body">
+    <input type="hidden" id="fk-edit-id">
+    <div class="mdm-form-group">
+      <label>Komoditas</label>
+      <input class="mdm-input" id="fk-nama" disabled>
+    </div>
+    <div class="mdm-form-row">
+      <div class="mdm-form-group">
+        <label>Faktor Lama (%)</label>
+        <input class="mdm-input" id="fk-lama" disabled style="background:#F8FAFC;color:var(--text-muted)">
+      </div>
+      <div class="mdm-form-group">
+        <label>Faktor Baru (%) <span class="required">*</span></label>
+        <input class="mdm-input" id="fk-baru" type="number" step="0.001" placeholder="mis: 6.900">
+      </div>
+    </div>
+    <div class="mdm-form-group">
+      <label>Berlaku Mulai Tahun <span class="required">*</span></label>
+      <input class="mdm-input" id="fk-berlaku" type="number" placeholder="mis: 2024">
+      <div class="mdm-form-hint">Faktor lama tetap berlaku untuk tahun sebelum ini.</div>
+    </div>
+    <div class="mdm-form-group">
+      <label>Sumber Kajian <span class="required">*</span></label>
+      <input class="mdm-input" id="fk-sumber" placeholder="mis: Kajian BPS 2024 No. XX">
+    </div>
+    <div class="mdm-form-group">
+      <label>Alasan Perubahan <span class="required">*</span></label>
+      <textarea class="mdm-textarea" id="fk-alasan" placeholder="Jelaskan alasan perubahan faktor konversi ini"></textarea>
+    </div>
+
+    <!-- History -->
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #E2E8F0">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:8px">📜 Riwayat Perubahan</div>
+      <div id="fk-history" style="font-size:0.78rem;color:var(--text-muted)">Memuat...</div>
+    </div>
+
+    <div class="mdm-save-result" id="fk-save-result"></div>
+  </div>
+  <div class="mdm-drawer-footer">
+    <button class="btn btn-ghost" onclick="closeDrawer('fk-drawer','fk-overlay')">Batal</button>
+    <button class="btn btn-warning" onclick="triggerRecalc()" style="background:#D97706;color:#fff;border:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-size:0.81rem">Hitung Ulang Historis</button>
+    <button class="btn btn-primary" onclick="saveFaktor()">Simpan</button>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  let _allFaktor = [];
+  let _filtered = [];
+
+  async function loadFaktor() {
+    try {
+      _allFaktor = await mdmGetFaktorKonversi();
+      filterFaktor();
+    } catch (e) { mdmToast('Gagal memuat: ' + e.message, 'error'); }
+  }
+
+  function filterFaktor() {
+    const q = document.getElementById('fk-q').value.toLowerCase();
+    _filtered = q ? _allFaktor.filter(f => f.nama.toLowerCase().includes(q)) : [..._allFaktor];
+    document.getElementById('fk-count').textContent = `${_filtered.length} komoditas`;
+    const tbody = document.getElementById('fk-tbody');
+    tbody.innerHTML = _filtered.length ? _filtered.map((f, i) => `
+      <tr>
+        <td style="text-align:center;color:var(--text-muted);font-size:0.76rem">${i+1}</td>
+        <td style="font-weight:600">${f.nama}</td>
+        <td style="font-size:0.78rem;color:var(--text-muted)">${f.bahan_baku || '—'}</td>
+        <td style="font-size:0.78rem">${f.produk_jadi || '—'}</td>
+        <td class="num"><span class="faktor-val">${parseFloat(f.faktor_konversi||0).toFixed(3)}</span>%</td>
+        <td style="font-size:0.78rem">${f.berlaku_mulai || '2010'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openEditFaktor(${f.id})">Edit</button></td>
+      </tr>`).join('')
+      : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">Tidak ada data</td></tr>';
+  }
+
+  async function openEditFaktor(id) {
+    const f = _filtered.find(x => x.id === id);
+    if (!f) return;
+    document.getElementById('fk-edit-id').value = id;
+    document.getElementById('fk-drawer-title').textContent = `Edit Faktor: ${f.nama}`;
+    document.getElementById('fk-nama').value = f.nama;
+    document.getElementById('fk-lama').value = parseFloat(f.faktor_konversi||0).toFixed(3);
+    document.getElementById('fk-baru').value = '';
+    document.getElementById('fk-berlaku').value = new Date().getFullYear();
+    document.getElementById('fk-sumber').value = '';
+    document.getElementById('fk-alasan').value = '';
+    openDrawer('fk-drawer', 'fk-overlay');
+    // Load history
+    try {
+      const hist = await mdmGetFaktorHistory(id);
+      const histEl = document.getElementById('fk-history');
+      if (!hist.history.length) { histEl.textContent = 'Belum ada riwayat perubahan.'; return; }
+      histEl.innerHTML = '<ul class="audit-timeline">' + hist.history.map(h => `
+        <li class="audit-item">
+          <div class="audit-dot update"></div>
+          <div class="audit-content">
+            <div class="audit-meta">${fmtDate(h.waktu)} · ${h.user_nama || 'System'}</div>
+            <div class="audit-diff">
+              <span class="old">${h.nilai_lama}%</span> → <span class="new">${h.nilai_baru}%</span>
+              ${h.berlaku_mulai ? `(mulai ${h.berlaku_mulai})` : ''}
+            </div>
+            ${h.alasan ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">${h.alasan}</div>` : ''}
+          </div>
+        </li>`).join('') + '</ul>';
+    } catch {}
+  }
+
+  async function saveFaktor() {
+    const id = document.getElementById('fk-edit-id').value;
+    const data = {
+      faktor_konversi: parseFloat(document.getElementById('fk-baru').value),
+      berlaku_mulai:   parseInt(document.getElementById('fk-berlaku').value),
+      sumber_kajian:   document.getElementById('fk-sumber').value.trim(),
+      alasan:          document.getElementById('fk-alasan').value.trim(),
+    };
+    const res = document.getElementById('fk-save-result');
+    try {
+      const result = await mdmUpdateFaktor(parseInt(id), data, getMdmUser());
+      res.textContent = result.cascade_warning || 'Berhasil disimpan ✓';
+      res.className = 'mdm-save-result success show';
+      mdmToast('Faktor konversi diperbarui', 'success');
+      await loadFaktor();
+    } catch (e) {
+      res.textContent = 'Gagal: ' + e.message; res.className = 'mdm-save-result error show';
+    }
+  }
+
+  function triggerRecalc() {
+    const id = document.getElementById('fk-edit-id').value;
+    const nama = document.getElementById('fk-nama').value;
+    mdmConfirmWithReason({
+      title: `Hitung Ulang Historis: ${nama}`,
+      message: `Masukkan rentang tahun yang ingin dihitung ulang. Proses ini berjalan di background dan membutuhkan waktu.<br><br><label style="font-size:0.8rem">Tahun Mulai:</label><input id="recalc-mulai" type="number" value="2020" style="display:block;width:100%;margin:4px 0 8px;padding:6px;border:1px solid #D1D5DB;border-radius:4px"><label style="font-size:0.8rem">Tahun Akhir:</label><input id="recalc-akhir" type="number" value="${new Date().getFullYear()}" style="display:block;width:100%;margin:4px 0;padding:6px;border:1px solid #D1D5DB;border-radius:4px">`,
+      requireReason: false,
+      onConfirm: async () => {
+        const mulai = parseInt(document.getElementById('recalc-mulai')?.value || 2020);
+        const akhir = parseInt(document.getElementById('recalc-akhir')?.value || new Date().getFullYear());
+        try {
+          const result = await mdmTriggerRecalc(parseInt(id), mulai, akhir, getMdmUser());
+          mdmToast(result.message, 'success', 5000);
+        } catch (e) { mdmToast('Gagal trigger recalc: ' + e.message, 'error'); }
+      },
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', loadFaktor);
+</script>
+</body>
+</html>

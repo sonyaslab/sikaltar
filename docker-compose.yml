@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: simultan_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: simultan_db
+      POSTGRES_USER: simultan
+      POSTGRES_PASSWORD: simultan2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - simultan_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U simultan -d simultan_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: simultan_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - simultan_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  simultan_pgdata:
+  simultan_redisdata:

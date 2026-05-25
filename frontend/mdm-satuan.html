@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Satuan & Wujud Produksi | MDM SIMULTAN</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+</head>
+<body>
+<div class="mdm-shell">
+  <nav class="mdm-sidebar">
+    <div class="mdm-sidebar-brand">
+      <div class="brand-name">SIMULTAN · MDM</div>
+      <div class="brand-sub">Master Data Management</div>
+      <div class="mdm-admin-badge">🔒 ADMIN</div>
+    </div>
+    <div class="mdm-nav">
+      <a class="mdm-nav-item" href="mdm-index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard MDM</span></a>
+      <a class="mdm-nav-item" href="mdm-kategori.html"><span class="nav-icon">📂</span><span class="nav-label">Kategori</span></a>
+      <a class="mdm-nav-item" href="mdm-komoditas.html"><span class="nav-icon">🌾</span><span class="nav-label">Komoditas</span></a>
+      <a class="mdm-nav-item" href="mdm-klasifikasi.html"><span class="nav-icon">🗺️</span><span class="nav-label">Klasifikasi KBLI/KBKI</span></a>
+      <a class="mdm-nav-item active" href="mdm-satuan.html"><span class="nav-icon">📐</span><span class="nav-label">Satuan & Wujud</span></a>
+      <a class="mdm-nav-item" href="mdm-faktor-konversi.html"><span class="nav-icon">⚔️</span><span class="nav-label">Faktor Konversi</span></a>
+      <a class="mdm-nav-item" href="mdm-audit.html"><span class="nav-icon">📜</span><span class="nav-label">Riwayat Perubahan</span></a>
+      <a class="mdm-nav-item" href="index.html"><span class="nav-icon">←</span><span class="nav-label">Dashboard Sistem</span></a>
+    </div>
+  </nav>
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <h1>📐 Satuan & Wujud Produksi</h1>
+      <button class="btn btn-primary" onclick="openAddSatuan()">+ Tambah Satuan</button>
+    </div>
+    <div class="mdm-body">
+      <div class="mdm-card">
+        <div class="mdm-filter-bar">
+          <span style="font-size:0.81rem;color:var(--text-muted)">Catatan: Satuan yang sudah digunakan tidak bisa dihapus, hanya bisa dinonaktifkan.</span>
+          <label class="mdm-toggle" style="margin-left:auto">
+            <input type="checkbox" id="chk-nonaktif" onchange="loadSatuan()">
+            <span class="mdm-toggle-track"></span>
+            <span class="mdm-toggle-label" style="font-size:0.78rem">Tampilkan semua (termasuk nonaktif)</span>
+          </label>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="mdm-table">
+            <thead><tr>
+              <th style="width:60px">No</th>
+              <th>Kode</th>
+              <th>Nama Satuan</th>
+              <th>Keterangan</th>
+              <th class="num">Komoditas</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr></thead>
+            <tbody id="satuan-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer: Add/Edit Satuan -->
+<div class="mdm-drawer-overlay" id="satuan-overlay"></div>
+<div class="mdm-drawer" id="satuan-drawer">
+  <div class="mdm-drawer-header">
+    <span class="mdm-drawer-title" id="satuan-drawer-title">Tambah Satuan</span>
+    <button class="mdm-drawer-close" onclick="closeDrawer('satuan-drawer','satuan-overlay')">&#x2715;</button>
+  </div>
+  <div class="mdm-drawer-body">
+    <input type="hidden" id="satuan-edit-id">
+    <div class="mdm-form-group">
+      <label>Kode Satuan <span class="required">*</span></label>
+      <input class="mdm-input" id="satuan-kode" placeholder="mis: Ton, M3, Ekor">
+    </div>
+    <div class="mdm-form-group">
+      <label>Nama Lengkap <span class="required">*</span></label>
+      <input class="mdm-input" id="satuan-nama" placeholder="mis: Ton (1.000 Kg)">
+    </div>
+    <div class="mdm-form-group">
+      <label>Keterangan</label>
+      <textarea class="mdm-textarea" id="satuan-keterangan" placeholder="Penjelasan singkat satuan ini"></textarea>
+    </div>
+    <div class="mdm-save-result" id="satuan-save-result"></div>
+  </div>
+  <div class="mdm-drawer-footer">
+    <button class="btn btn-ghost" onclick="closeDrawer('satuan-drawer','satuan-overlay')">Batal</button>
+    <button class="btn btn-primary" onclick="saveSatuan()">Simpan</button>
+  </div>
+</div>
+
+<script src="js/mdm-api.js"></script>
+<script src="js/mdm-utils.js"></script>
+<script>
+  let _satuan = [];
+
+  async function loadSatuan() {
+    const aktifOnly = !document.getElementById('chk-nonaktif').checked;
+    try {
+      _satuan = await mdmGetSatuan();
+      if (aktifOnly) _satuan = _satuan.filter(s => s.aktif);
+      renderSatuan();
+    } catch (e) { mdmToast('Gagal memuat satuan: ' + e.message, 'error'); }
+  }
+
+  function renderSatuan() {
+    const tbody = document.getElementById('satuan-tbody');
+    if (!_satuan.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">Tidak ada data</td></tr>';
+      return;
+    }
+    tbody.innerHTML = _satuan.map((s, i) => `
+      <tr class="${s.aktif ? '' : 'inactive'}">
+        <td class="ctr" style="text-align:center;color:var(--text-muted)">${i+1}</td>
+        <td class="mono">${s.kode}</td>
+        <td style="font-weight:${s.aktif?600:400}">${s.nama}</td>
+        <td style="font-size:0.77rem;color:var(--text-muted)">${s.keterangan || '—'}</td>
+        <td class="num">${s.jumlah_komoditas}</td>
+        <td>${fmtStatus(s.aktif)}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openEditSatuan(${s.id})">Edit</button>
+          ${s.aktif && s.jumlah_komoditas === 0
+            ? `<button class="btn btn-danger btn-sm" onclick="deleteSatuan(${s.id},'${s.kode}')">Nonaktifkan</button>` : ''}
+        </td>
+      </tr>`).join('');
+  }
+
+  function openAddSatuan() {
+    document.getElementById('satuan-drawer-title').textContent = 'Tambah Satuan';
+    document.getElementById('satuan-edit-id').value = '';
+    ['satuan-kode','satuan-nama','satuan-keterangan'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('satuan-kode').disabled = false;
+    openDrawer('satuan-drawer', 'satuan-overlay');
+  }
+
+  function openEditSatuan(id) {
+    const s = _satuan.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('satuan-drawer-title').textContent = `Edit Satuan: ${s.kode}`;
+    document.getElementById('satuan-edit-id').value = id;
+    document.getElementById('satuan-kode').value = s.kode;
+    document.getElementById('satuan-kode').disabled = true;
+    document.getElementById('satuan-nama').value = s.nama;
+    document.getElementById('satuan-keterangan').value = s.keterangan || '';
+    openDrawer('satuan-drawer', 'satuan-overlay');
+  }
+
+  async function saveSatuan() {
+    const id = document.getElementById('satuan-edit-id').value;
+    const data = {
+      kode: document.getElementById('satuan-kode').value.trim(),
+      nama: document.getElementById('satuan-nama').value.trim(),
+      keterangan: document.getElementById('satuan-keterangan').value.trim() || null,
+    };
+    const res = document.getElementById('satuan-save-result');
+    try {
+      if (id) { await mdmUpdateSatuan(parseInt(id), data); }
+      else     { await mdmCreateSatuan(data); }
+      res.textContent = 'Berhasil disimpan ✓'; res.className = 'mdm-save-result success show';
+      mdmToast('Satuan berhasil disimpan', 'success');
+      setTimeout(() => closeDrawer('satuan-drawer','satuan-overlay'), 800);
+      await loadSatuan();
+    } catch (e) {
+      res.textContent = 'Gagal: ' + e.message; res.className = 'mdm-save-result error show';
+    }
+  }
+
+  async function deleteSatuan(id, kode) {
+    mdmConfirmWithReason({
+      title: `Nonaktifkan Satuan: ${kode}`,
+      message: 'Satuan ini tidak digunakan komoditas mana pun. Yakin ingin dinonaktifkan?',
+      requireReason: true,
+      onConfirm: async (reason) => {
+        try {
+          await mdmDeleteSatuan(id, reason);
+          mdmToast(`Satuan ${kode} dinonaktifkan`, 'success');
+          await loadSatuan();
+        } catch(e) { mdmToast('Gagal: ' + e.message, 'error'); }
+      },
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', loadSatuan);
+</script>
+</body>
+</html>

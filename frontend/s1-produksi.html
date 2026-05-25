@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S1.P — Input Produksi | SIMULTAN PDRB Kaltara</title>
+  <meta name="description" content="Input data produksi komoditas — LK PDRB Kalimantan Utara">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/table.css">
+  <style>
+    .tw-input {
+      width: 80px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px 6px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      text-align: right;
+      outline: none;
+    }
+    .tw-input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-pale); }
+    .tw-total { font-weight: 600; font-family: var(--font-mono); color: var(--primary); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="app-name">SIMULTAN</div>
+      <div class="app-sub">LK PDRB Provinsi Kalimantan Utara<br>BPS · Tahun Dasar 2010</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Input S1</div>
+      <a href="s1-harga.html" class="nav-item"><span class="nav-icon">💰</span> S1.H — Harga <span class="nav-badge">S1.H</span></a>
+      <a href="s1-produksi.html" class="nav-item active"><span class="nav-icon">🌾</span> S1.P — Produksi <span class="nav-badge">S1.P</span></a>
+      <a href="s1-rasio.html" class="nav-item"><span class="nav-icon">📊</span> S1.R — Rasio <span class="nav-badge">S1.R</span></a>
+      <a href="s1-deflator.html" class="nav-item"><span class="nav-icon">📉</span> S1.I — Deflator <span class="nav-badge">S1.I</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Hasil</div>
+      <a href="s2-lk.html" class="nav-item"><span class="nav-icon">📊</span> S2 — Lembar Kerja <span class="nav-badge">S2</span></a>
+      <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="page-header">
+      <div>
+        <div class="breadcrumb">S1 — Input Data</div>
+        <h1>S1.P — Input Produksi Komoditas</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Refresh</button>
+        <button class="btn btn-primary btn-sm" id="btn-export">↓ Export</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="filter-bar">
+        <label for="filter-wilayah">Wilayah</label>
+        <select id="filter-wilayah"></select>
+        <div class="filter-divider"></div>
+        <label for="filter-tahun">Tahun</label>
+        <select id="filter-tahun"></select>
+        <div class="filter-divider"></div>
+        <label for="filter-triwulan">Periode</label>
+        <select id="filter-triwulan"></select>
+        <div class="filter-divider"></div>
+        <label>
+          <input type="checkbox" id="show-tw" style="margin-right:4px">
+          Tampilkan rincian TW
+        </label>
+        <span class="filter-info" id="filter-info"></span>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-indicator" id="cascade-indicator"></div>
+        <span class="status-text" id="status-text">Siap</span>
+        <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted)" id="last-update"></span>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.75rem;color:var(--text-muted)">
+        <span><span style="display:inline-block;width:12px;height:12px;background:var(--row-empty);border:1px solid var(--border);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Belum diisi</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:var(--row-filled);border:1px solid var(--border);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Terisi</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:var(--warn-pale);border:1px solid #F9E79F;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Konflik TW vs Tahunan</span>
+      </div>
+
+      <div class="table-container">
+        <div class="table-scroll">
+          <table class="lk-table" id="produksi-table">
+            <thead>
+              <tr>
+                <th class="col-no">No</th>
+                <th style="min-width:260px">Komoditas</th>
+                <th style="width:110px">Wujud</th>
+                <th style="width:90px">Satuan</th>
+                <th class="col-nilai">Kuantum</th>
+                <th class="col-status">Status</th>
+                <th class="col-sumber">Sumber Data</th>
+                <th class="col-action" style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody id="produksi-tbody">
+              <tr><td colspan="8" class="table-empty-msg"><div class="spinner" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script src="js/sse.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/s1-produksi.js"></script>
+</body>
+</html>
