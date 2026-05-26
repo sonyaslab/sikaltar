@@ -1,12 +1,12 @@
-@echo off
+﻿@echo off
 REM ============================================================
-REM SIMULTAN — Setup Script untuk Lingkungan BPS (Windows)
+REM SIKALTARA — Setup Script untuk Lingkungan BPS (Windows)
 REM Sistem LK PDRB Provinsi Kalimantan Utara
 REM ============================================================
 
 echo.
 echo  ╔══════════════════════════════════════════════════════╗
-echo  ║   SIMULTAN — Sistem LK PDRB Kalimantan Utara        ║
+echo  ║   SIKALTARA — Sistem LK PDRB Kalimantan Utara        ║
 echo  ║   BPS Indonesia, SNA 2008, Tahun Dasar 2010=100     ║
 echo  ╚══════════════════════════════════════════════════════╝
 echo.
@@ -55,7 +55,7 @@ if not exist ".env" (
     echo.
     echo [PENTING] Edit file backend\.env dan sesuaikan DATABASE_URL
     echo           Contoh untuk PostgreSQL lokal:
-    echo           DATABASE_URL=postgresql://postgres:password@localhost:5432/simultan_db
+    echo           DATABASE_URL=postgresql://postgres:password@localhost:5432/sikaltara_db
     echo.
 )
 
@@ -97,7 +97,7 @@ if /i "%run_server%"=="y" (
 )
 
 echo.
-echo [SELESAI] Setup SIMULTAN berhasil!
+echo [SELESAI] Setup SIKALTARA berhasil!
 echo.
 echo Perintah berguna:
 echo   cd backend

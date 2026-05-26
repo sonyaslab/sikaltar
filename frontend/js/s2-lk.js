@@ -1,4 +1,4 @@
-/**
+﻿/**
  * s2-lk.js — S2 Lembar Kerja Main Controller
  *
  * Orkestrasi:
@@ -30,7 +30,7 @@ let _sseUnsubscribe = null;
 
 window.addEventListener('DOMContentLoaded', async () => {
   // Restore state from sessionStorage
-  const saved = sessionStorage.getItem('simultan_filters');
+  const saved = sessionStorage.getItem('sikaltara_filters');
   if (saved) {
     try {
       const f = JSON.parse(saved);

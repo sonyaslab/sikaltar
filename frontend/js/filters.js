@@ -1,9 +1,9 @@
-/**
+﻿/**
  * filters.js — Shared filter state management
  * Wilayah, Tahun, Triwulan filters — persisted to sessionStorage
  */
 
-const FILTER_KEY = 'simultan_filters';
+const FILTER_KEY = 'sikaltara_filters';
 const TAHUN_MIN = 2008;
 const TAHUN_MAX = 2035;
 

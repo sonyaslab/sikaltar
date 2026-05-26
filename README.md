@@ -1,4 +1,4 @@
-# SIMULTAN — Sistem Lembar Kerja PDRB Kalimantan Utara
+﻿# SIKALTARA — Sistem Lembar Kerja PDRB Kalimantan Utara
 
 **Badan Pusat Statistik Provinsi Kalimantan Utara**
 Standar: SNA 2008 | Tahun Dasar: 2010=100 | Metode: BPS Indonesia
@@ -8,7 +8,7 @@ Standar: SNA 2008 | Tahun Dasar: 2010=100 | Metode: BPS Indonesia
 ## Struktur Proyek
 
 ```
-SIMULTAN/
+SIKALTARA/
 ├── setup.bat                    ← Jalankan ini pertama kali di Windows
 ├── docker-compose.yml           ← PostgreSQL + Redis (opsional)
 └── backend/
@@ -59,9 +59,9 @@ setup.bat
 1. Install [PostgreSQL 15/16](https://www.postgresql.org/download/windows/)
 2. Buat database:
    ```sql
-   CREATE DATABASE simultan_db;
-   CREATE USER simultan WITH PASSWORD 'simultan2024';
-   GRANT ALL PRIVILEGES ON DATABASE simultan_db TO simultan;
+   CREATE DATABASE sikaltara_db;
+   CREATE USER sikaltara WITH PASSWORD 'sikaltara2024';
+   GRANT ALL PRIVILEGES ON DATABASE sikaltara_db TO sikaltara;
    ```
 3. Jalankan `setup.bat`
 
@@ -72,7 +72,7 @@ setup.bat
 Salin `backend/.env.example` ke `backend/.env` dan sesuaikan:
 
 ```env
-DATABASE_URL=postgresql://simultan:simultan2024@localhost:5432/simultan_db
+DATABASE_URL=postgresql://sikaltara:sikaltara2024@localhost:5432/sikaltara_db
 REDIS_URL=redis://localhost:6379/0
 APP_ENV=development
 ```

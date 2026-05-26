@@ -1,5 +1,5 @@
-"""
-SIMULTAN — FastAPI Application Entry Point
+﻿"""
+SIKALTARA — FastAPI Application Entry Point
 Sistem LK PDRB Provinsi Kalimantan Utara
 """
 from __future__ import annotations
@@ -20,14 +20,14 @@ from app.database import check_connection
 async def lifespan(app: FastAPI):
     """Startup dan shutdown lifecycle."""
     if check_connection():
-        print("[SIMULTAN] ✅ Koneksi database berhasil")
+        print("[SIKALTARA] ✅ Koneksi database berhasil")
     else:
-        print("[SIMULTAN] ❌ Koneksi database GAGAL — periksa konfigurasi DATABASE_URL")
+        print("[SIKALTARA] ❌ Koneksi database GAGAL — periksa konfigurasi DATABASE_URL")
     yield
 
 
 app = FastAPI(
-    title="SIMULTAN — Sistem LK PDRB Kalimantan Utara",
+    title="SIKALTARA — Sistem LK PDRB Kalimantan Utara",
     description=(
         "Backend API untuk Lembar Kerja PDRB Provinsi Kalimantan Utara. "
         "Standar: BPS Indonesia, SNA 2008, Tahun Dasar 2010=100."
@@ -108,4 +108,4 @@ def root():
     idx = frontend_dir / "index.html"
     if idx.exists():
         return FileResponse(str(idx))
-    return {"aplikasi": "SIMULTAN", "versi": "2.0.0", "ui": "/app/index.html"}
+    return {"aplikasi": "SIKALTARA", "versi": "2.0.0", "ui": "/app/index.html"}

@@ -1,5 +1,5 @@
-"""
-SIMULTAN — Database Connection & Session Management
+﻿"""
+SIKALTARA — Database Connection & Session Management
 PostgreSQL + SQLAlchemy 2.x
 """
 from __future__ import annotations
@@ -15,7 +15,7 @@ load_dotenv()
 
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
-    "postgresql://simultan:simultan2024@localhost:5432/simultan_db",
+    "postgresql://sikaltara:sikaltara2024@localhost:5432/sikaltara_db",
 )
 
 # Engine dengan pool yang sesuai untuk lingkungan BPS (koneksi terbatas)

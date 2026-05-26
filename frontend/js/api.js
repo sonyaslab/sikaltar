@@ -1,5 +1,5 @@
-/**
- * api.js — SIMULTAN API Client
+﻿/**
+ * api.js — SIKALTARA API Client
  * Fetch wrapper dengan error handling, toast notification, dan retry.
  */
 

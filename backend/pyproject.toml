@@ -1,9 +1,9 @@
-[build-system]
+﻿[build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "simultan-backend"
+name = "sikaltara-backend"
 version = "1.0.0"
 description = "Sistem LK PDRB Provinsi Kalimantan Utara — BPS Indonesia"
 # readme = "README.md"

@@ -1,32 +1,32 @@
-version: "3.9"
+﻿version: "3.9"
 
 services:
   db:
     image: postgres:16-alpine
-    container_name: simultan_db
+    container_name: sikaltara_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: simultan_db
-      POSTGRES_USER: simultan
-      POSTGRES_PASSWORD: simultan2024
+      POSTGRES_DB: sikaltara_db
+      POSTGRES_USER: sikaltara
+      POSTGRES_PASSWORD: sikaltara2024
     ports:
       - "5432:5432"
     volumes:
-      - simultan_pgdata:/var/lib/postgresql/data
+      - sikaltara_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U simultan -d simultan_db"]
+      test: ["CMD-SHELL", "pg_isready -U sikaltara -d sikaltara_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: simultan_redis
+    container_name: sikaltara_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
-      - simultan_redisdata:/data
+      - sikaltara_redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -34,5 +34,5 @@ services:
       retries: 5
 
 volumes:
-  simultan_pgdata:
-  simultan_redisdata:
+  sikaltara_pgdata:
+  sikaltara_redisdata:
