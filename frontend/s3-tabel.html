@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S3 — Tabel Pokok PDRB | SIMULTAN Kaltara</title>
+  <meta name="description" content="S3 Tabel Pokok PDRB Kalimantan Utara — 6 tabel standar BPS: ADHB, ADHK, Distribusi, Laju Pertumbuhan, Indeks Implisit, Laju Implisit">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/s3-tabel.css">
+</head>
+<body>
+<div class="s3-shell">
+
+  <!-- ══ Sidebar ══════════════════════════════════════════════ -->
+  <nav class="s3-sidebar">
+    <div class="s3-sidebar-brand">
+      <div class="app-name">SIMULTAN · S3</div>
+      <div class="app-sub">Tabel Pokok PDRB<br>BPS · Kalimantan Utara</div>
+      <a href="index.html" class="back-link">← Kembali ke Dashboard</a>
+    </div>
+
+    <div class="s3-nav-section">
+      <div class="s3-nav-label">Pilih Tabel</div>
+      <button class="tabel-nav-btn active" data-tabel="ntb_adhb" id="nav-t1">
+        <span class="tno">1</span>PDRB ADHB
+      </button>
+      <button class="tabel-nav-btn" data-tabel="ntb_adhk" id="nav-t2">
+        <span class="tno">2</span>PDRB ADHK 2010
+      </button>
+      <button class="tabel-nav-btn" data-tabel="distribusi_pct" id="nav-t3">
+        <span class="tno">3</span>Distribusi %
+      </button>
+      <button class="tabel-nav-btn" data-tabel="laju_pertumbuhan_pct" id="nav-t4">
+        <span class="tno">4</span>Laju Pertumbuhan
+      </button>
+      <button class="tabel-nav-btn" data-tabel="indeks_implisit" id="nav-t5">
+        <span class="tno">5</span>Indeks Implisit
+      </button>
+      <button class="tabel-nav-btn" data-tabel="laju_implisit_pct" id="nav-t6">
+        <span class="tno">6</span>Laju Implisit
+      </button>
+    </div>
+
+    <div class="s3-nav-section">
+      <div class="s3-nav-label">Navigasi</div>
+      <a href="s3-dashboard.html" class="tabel-nav-btn" style="text-decoration:none">
+        <span class="tno">📊</span>Dashboard Ringkasan
+      </a>
+      <a href="s2-lk.html" class="tabel-nav-btn" style="text-decoration:none">
+        <span class="tno">📋</span>Lembar Kerja S2
+      </a>
+    </div>
+  </nav>
+
+  <!-- ══ Main ════════════════════════════════════════════════ -->
+  <div class="s3-main">
+
+    <!-- Header -->
+    <header class="s3-header">
+      <span style="font-weight:700;color:var(--primary);font-size:0.88rem">S3</span>
+      <span style="color:var(--border)">|</span>
+      <h1 id="s3-header-title">Tabel 1 — PDRB Atas Dasar Harga Berlaku (Juta Rupiah)</h1>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost btn-sm" id="btn-collapse-all" title="Collapse semua subkategori">⊖ Collapse</button>
+        <button class="btn btn-ghost btn-sm" id="btn-expand-all" title="Expand semua subkategori">⊕ Expand</button>
+        <button class="btn btn-primary btn-sm" id="btn-export">⬇ Export Excel</button>
+      </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="s3-filter">
+      <label for="f-wilayah">Wilayah</label>
+      <select id="f-wilayah"></select>
+
+      <div class="sep"></div>
+
+      <label for="f-tahun-awal">Tahun</label>
+      <input type="number" id="f-tahun-awal" value="2008" min="2008" max="2030" style="width:76px">
+      <span style="color:var(--text-muted);font-size:0.82rem">s/d</span>
+      <input type="number" id="f-tahun-akhir" value="2024" min="2008" max="2030" style="width:76px">
+
+      <div class="sep"></div>
+
+      <button class="btn btn-primary btn-sm" id="btn-muat">↻ Muat Data</button>
+
+      <div style="margin-left:auto;font-size:0.75rem;color:var(--text-muted)" id="s3-last-updated">—</div>
+    </div>
+
+    <!-- Tabel Body -->
+    <div class="s3-body">
+      <div class="tabel-card">
+        <div class="tabel-card-header">
+          <div>
+            <div class="tabel-title" id="tabel-card-title">Tabel 1 — PDRB Atas Dasar Harga Berlaku</div>
+            <div class="tabel-subtitle" id="tabel-card-subtitle">Satuan: Juta Rupiah</div>
+          </div>
+        </div>
+
+        <div class="tabel-scroll-wrap" id="tabel-wrap">
+          <div class="tabel-loading" id="tabel-loading">
+            <div class="spinner"></div> Memuat data…
+          </div>
+          <div id="tabel-container" style="display:none"></div>
+        </div>
+
+        <div class="tabel-legend">
+          <span><span class="leg-dot" style="background:#EBF5FB;border:1px solid #AED6F1"></span> Kategori utama</span>
+          <span><span class="leg-dot" style="background:var(--surface-2);border:1px solid var(--border)"></span> Subkategori (klik untuk toggle)</span>
+          <span><span class="leg-dot" style="background:#FDEDEC;border:1px solid #F5B7B1"></span> Laju negatif (&lt; 0%)</span>
+          <span><span class="leg-dot" style="background:#EAFAF1;border:1px solid #A9DFBF"></span> Laju tinggi (&gt; 10%)</span>
+          <span><span class="leg-dot" style="background:var(--primary);border:1px solid var(--primary)"></span> PDRB Total</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /s3-main -->
+</div><!-- /s3-shell -->
+
+<div id="toast-container"></div>
+
+<!-- SheetJS CDN -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/s3-tabel.js"></script>
+</body>
+</html>

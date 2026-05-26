@@ -74,6 +74,7 @@ from app.api.mdm_satuan import router as mdm_satuan_router         # noqa: E402
 from app.api.mdm_faktor_konversi import router as mdm_faktor_router  # noqa: E402
 from app.api.mdm_audit import router as mdm_audit_router           # noqa: E402
 from app.api.mdm_metode import router as mdm_metode_router         # noqa: E402
+from app.api.s3 import router as s3_router                         # noqa: E402
 
 app.include_router(referensi_router, prefix="/api", tags=["Referensi"])
 app.include_router(harga_router, prefix="/api/input/harga", tags=["S1.H — Harga"])
@@ -82,6 +83,7 @@ app.include_router(rasio_router, prefix="/api/rasio", tags=["S1.R — Rasio"])
 app.include_router(deflator_router, prefix="/api/input/deflator", tags=["S1.I — Deflator"])
 app.include_router(sse_router, prefix="/api", tags=["SSE Events"])
 app.include_router(s2_router, prefix="/api/s2", tags=["S2 — Lembar Kerja Hasil"])
+app.include_router(s3_router, prefix="/api/s3", tags=["S3 — Tabel Pokok & Dashboard"])
 
 # ─── MDM Routers ────────────────────────────────────────────────────────────────
 app.include_router(mdm_kategori_router,    prefix="/api/mdm/kategori",        tags=["MDM — Kategori"])

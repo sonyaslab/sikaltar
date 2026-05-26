@@ -1,0 +1,152 @@
+/* ============================================================
+   S3 — Dashboard Ringkasan PDRB
+   ============================================================ */
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.dash-shell { display: flex; min-height: 100vh; }
+
+.dash-sidebar {
+  width: 220px;
+  background: var(--nav-bg);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+}
+.dash-sidebar-brand { padding: 16px 18px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.dash-sidebar-brand .app-name { font-size: 1rem; font-weight: 700; color: #fff; }
+.dash-sidebar-brand .app-sub { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 2px; line-height: 1.4; }
+.dash-nav-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; color: rgba(255,255,255,0.6);
+  font-size: 0.82rem; font-weight: 500; text-decoration: none;
+  border-radius: 5px; margin: 1px 6px; width: calc(100% - 12px);
+  transition: all 150ms;
+}
+.dash-nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.dash-nav-link.active { background: var(--primary); color: #fff; }
+
+.dash-main {
+  margin-left: 220px; flex: 1;
+  display: flex; flex-direction: column; min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ── Top Bar ────────────────────────────────────────────────── */
+.dash-topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.dash-topbar h1 { font-size: 0.95rem; font-weight: 700; color: var(--primary); }
+.dash-topbar label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+.dash-topbar select {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 5px 9px; font-size: 0.83rem; font-family: var(--font);
+  color: var(--text); background: var(--surface-2); outline: none;
+  transition: border-color var(--transition);
+}
+.dash-topbar select:focus { border-color: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-pale); }
+
+/* ── Dashboard Body ─────────────────────────────────────────── */
+.dash-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── KPI Cards ──────────────────────────────────────────────── */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 150ms, box-shadow 150ms;
+  position: relative; overflow: hidden;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--primary);
+}
+.kpi-card:nth-child(2)::before { background: var(--accent); }
+.kpi-card:nth-child(3)::before { background: var(--warn); }
+.kpi-card:nth-child(4)::before { background: var(--info); }
+
+.kpi-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; }
+.kpi-value { font-size: 1.55rem; font-weight: 800; color: var(--primary); line-height: 1.1; font-family: var(--font-mono); }
+.kpi-card:nth-child(2) .kpi-value { color: var(--accent-hover); }
+.kpi-card:nth-child(3) .kpi-value { color: var(--warn); }
+.kpi-card:nth-child(4) .kpi-value { color: var(--info); }
+.kpi-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+.kpi-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 0.75rem; font-weight: 600; margin-top: 6px; padding: 2px 7px; border-radius: 99px; }
+.kpi-delta.up   { background: var(--success-pale); color: var(--success); }
+.kpi-delta.down { background: var(--danger-pale);  color: var(--danger); }
+.kpi-delta.flat { background: var(--border-light); color: var(--text-muted); }
+
+/* ── Section Header ─────────────────────────────────────────── */
+.section-hdr {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px;
+}
+
+/* ── Chart Grid ─────────────────────────────────────────────── */
+.chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+.chart-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.chart-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 8px;
+}
+.chart-card-header .chart-title { font-size: 0.85rem; font-weight: 700; color: var(--primary); flex: 1; }
+.chart-card-header .chart-sub { font-size: 0.72rem; color: var(--text-muted); }
+.chart-body { padding: 14px 16px; position: relative; }
+.chart-canvas-wrap { position: relative; }
+
+/* ── Triwulanan Table ───────────────────────────────────────── */
+.tw-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.tw-table th { background: var(--nav-bg); color: #fff; padding: 7px 10px; text-align: center; font-weight: 600; position: sticky; top: 0; }
+.tw-table th:first-child { text-align: left; }
+.tw-table td { border-bottom: 1px solid var(--border-light); padding: 6px 10px; text-align: right; font-family: var(--font-mono); }
+.tw-table td:first-child { text-align: left; font-family: var(--font); }
+.tw-table tr.tw-total td { background: var(--primary); color: #fff; font-weight: 700; }
+.tw-table td.laju-neg { color: var(--danger); font-weight: 600; }
+.tw-table td.laju-pos { color: var(--success); font-weight: 600; }
+.tw-table tbody tr:hover td { background: var(--surface-2); }
+.tw-table tbody tr.tw-total:hover td { background: var(--primary-hover); }
+
+.tw-scroll { max-height: 340px; overflow-y: auto; }
+
+/* ── Kelengkapan Panel ──────────────────────────────────────── */
+.kel-grid { display: flex; flex-direction: column; gap: 10px; }
+.kel-item { display: flex; align-items: center; gap: 10px; }
+.kel-nama { font-size: 0.8rem; font-weight: 500; color: var(--text); min-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kel-bar-wrap { flex: 1; height: 10px; background: var(--border-light); border-radius: 99px; overflow: hidden; }
+.kel-bar-fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width 600ms ease; }
+.kel-bar-fill.done { background: var(--success); }
+.kel-bar-fill.low  { background: var(--danger); }
+.kel-bar-fill.mid  { background: var(--warn); }
+.kel-pct { font-size: 0.78rem; font-weight: 700; min-width: 42px; text-align: right; font-family: var(--font-mono); }
+.kel-check { font-size: 1rem; }
+.kel-loading { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.83rem; }
+
+/* ── Loading state ──────────────────────────────────────────── */
+.dash-loading-overlay {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; gap: 10px; color: var(--text-muted); font-size: 0.85rem;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-row { grid-template-columns: 1fr; }
+  .chart-row-2 { grid-template-columns: 1fr; }
+}

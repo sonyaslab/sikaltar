@@ -101,6 +101,12 @@
       <a href="s1-deflator.html" class="nav-item"><span class="nav-icon">📉</span> S1.I — Deflator <span class="nav-badge">S1.I</span></a>
     </div>
     <div class="sidebar-section">
+      <div class="sidebar-section-label">Laporan S3</div>
+      <a href="s3-dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard Ringkasan <span class="nav-badge">S3</span></a>
+      <a href="s3-tabel.html"     class="nav-item"><span class="nav-icon">📋</span> Tabel Pokok BPS <span class="nav-badge">S3</span></a>
+      <a href="s2-lk.html"        class="nav-item"><span class="nav-icon">📄</span> Lembar Kerja <span class="nav-badge">S2</span></a>
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-section-label">Sistem</div>
       <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span> Dashboard</a>
       <a href="/docs" class="nav-item" target="_blank"><span class="nav-icon">📖</span> API Docs</a>
@@ -131,11 +137,33 @@
         <a href="/docs" class="api-link" target="_blank">📖 API Docs</a>
       </div>
 
-      <!-- Modul Input S1 -->
-      <div>
-        <div class="section-title">Modul Input — Step 1</div>
-        <div class="dashboard-grid">
-          <a href="s2-lk.html" class="module-card" style="border-color:var(--primary);background:linear-gradient(135deg,var(--primary-pale) 0%,#fff 100%)">
+      <!-- S3 Laporan -->
+      <div class="section-title">Laporan S3 — Tabel Pokok &amp; Dashboard</div>
+      <div class="dashboard-grid" style="margin-bottom:8px">
+        <a href="s3-dashboard.html" class="module-card" style="border-color:var(--accent);background:linear-gradient(135deg,#e8faf5 0%,#fff 100%)">
+          <span class="card-icon">📊</span>
+          <div>
+            <span class="card-code" style="background:#D5F5E3;color:var(--accent-hover)">S3-DB</span>
+            <div class="card-title" style="color:var(--accent-hover)">Dashboard Ringkasan</div>
+          </div>
+          <div class="card-desc">KPI PDRB, tren ADHB vs ADHK, distribusi 17 kategori, laju pertumbuhan, dan status kelengkapan data per wilayah.</div>
+          <div class="card-arrow" style="color:var(--accent-hover);font-weight:700">→ Buka Dashboard</div>
+        </a>
+        <a href="s3-tabel.html" class="module-card" style="border-color:#8E44AD;background:linear-gradient(135deg,#f5eef8 0%,#fff 100%)">
+          <span class="card-icon">📋</span>
+          <div>
+            <span class="card-code" style="background:#E8DAEF;color:#6C3483">S3</span>
+            <div class="card-title" style="color:#6C3483">Tabel Pokok BPS</div>
+          </div>
+          <div class="card-desc">6 tabel standar BPS: ADHB, ADHK 2010, Distribusi %, Laju Pertumbuhan, Indeks Implisit, dan Laju Implisit. Collapse/expand hierarki, ekspor Excel.</div>
+          <div class="card-arrow" style="color:#6C3483;font-weight:700">→ Buka S3</div>
+        </a>
+      </div>
+
+      <!-- S2 + S1 Modul Input -->
+      <div class="section-title">Modul Input — Step 1</div>
+      <div class="dashboard-grid">
+        <a href="s2-lk.html" class="module-card" style="border-color:var(--primary);background:linear-gradient(135deg,var(--primary-pale) 0%,#fff 100%)">
             <span class="card-icon">📊</span>
             <div>
               <span class="card-code">S2</span>

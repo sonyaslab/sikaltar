@@ -1,0 +1,237 @@
+/* ============================================================
+   S3 — Tabel Pokok PDRB
+   ============================================================ */
+
+/* ── Layout ─────────────────────────────────────────────── */
+.s3-shell { display: flex; min-height: 100vh; }
+
+.s3-sidebar {
+  width: 220px;
+  background: var(--nav-bg);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+.s3-sidebar-brand {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.s3-sidebar-brand .app-name { font-size: 1rem; font-weight: 700; color: #fff; }
+.s3-sidebar-brand .app-sub  { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 2px; line-height: 1.4; }
+.back-link { font-size: 0.75rem; color: rgba(255,255,255,0.45); text-decoration: none; margin-top: 8px; display: block; }
+.back-link:hover { color: rgba(255,255,255,0.75); }
+
+.s3-nav-section { padding: 14px 0 4px; }
+.s3-nav-label { padding: 0 14px 6px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.3); }
+
+.tabel-nav-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.82rem; font-weight: 500;
+  border: none; background: none; cursor: pointer; width: 100%;
+  text-align: left; font-family: var(--font);
+  border-radius: 5px; margin: 1px 6px; width: calc(100% - 12px);
+  transition: all 150ms;
+}
+.tabel-nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.tabel-nav-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+.tabel-nav-btn .tno {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+}
+.tabel-nav-btn.active .tno { background: rgba(255,255,255,0.25); }
+
+/* ── Main Area ───────────────────────────────────────────── */
+.s3-main {
+  margin-left: 220px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.s3-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 12px;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.s3-header h1 { font-size: 0.92rem; font-weight: 600; flex: 1; }
+
+/* ── Filter Bar ──────────────────────────────────────────── */
+.s3-filter {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.s3-filter label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+.s3-filter select, .s3-filter input[type=number] {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 5px 8px; font-size: 0.83rem;
+  font-family: var(--font); color: var(--text);
+  background: var(--surface-2); outline: none;
+  transition: border-color var(--transition);
+}
+.s3-filter select:focus, .s3-filter input:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary-pale);
+}
+.s3-filter .sep { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+
+/* ── Tabel Pokok Table ───────────────────────────────────── */
+.s3-body { padding: 16px 20px; flex: 1; }
+
+.tabel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.tabel-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.tabel-card-header .tabel-title {
+  font-size: 0.88rem; font-weight: 700; color: var(--primary); flex: 1;
+}
+.tabel-card-header .tabel-subtitle {
+  font-size: 0.75rem; color: var(--text-muted);
+}
+
+.tabel-scroll-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 240px);
+  position: relative;
+}
+
+/* The actual table */
+.tabel-pokok {
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  min-width: max-content;
+  width: 100%;
+}
+.tabel-pokok th, .tabel-pokok td {
+  border: 1px solid var(--border-light);
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* Frozen column */
+.tabel-pokok th.col-no,
+.tabel-pokok td.col-no {
+  width: 36px; min-width: 36px;
+  position: sticky; left: 0; z-index: 3;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  text-align: center;
+  padding: 5px 4px;
+}
+.tabel-pokok th.col-nama,
+.tabel-pokok td.col-nama {
+  min-width: 280px; max-width: 320px;
+  position: sticky; left: 36px; z-index: 3;
+  background: var(--surface);
+  border-right: 2px solid var(--border);
+  padding: 5px 8px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Header row */
+.tabel-pokok thead tr th {
+  background: var(--nav-bg);
+  color: #fff;
+  padding: 7px 10px;
+  font-weight: 600; font-size: 0.75rem;
+  text-align: center;
+  position: sticky; top: 0; z-index: 4;
+}
+.tabel-pokok thead tr th.col-no { z-index: 6; background: var(--nav-bg); }
+.tabel-pokok thead tr th.col-nama { z-index: 6; text-align: left; background: var(--nav-bg); }
+
+/* Sub header (unit/satuan) */
+.tabel-pokok thead tr.sub-header th {
+  background: #1e3a52;
+  font-size: 0.7rem; font-weight: 400;
+  color: rgba(255,255,255,0.65);
+  padding: 4px 10px;
+  top: 33px;
+}
+.tabel-pokok thead tr.sub-header th.col-no,
+.tabel-pokok thead tr.sub-header th.col-nama { background: #1e3a52; z-index: 6; }
+
+/* Data cells */
+.tabel-pokok td.num { text-align: right; padding: 5px 10px; font-family: var(--font-mono); }
+.tabel-pokok td.dash { text-align: center; color: var(--text-light); padding: 5px 10px; }
+
+/* Row level styling */
+.tabel-pokok tr.row-level1 td { background: #EBF5FB; font-weight: 700; }
+.tabel-pokok tr.row-level1 td.col-no, .tabel-pokok tr.row-level1 td.col-nama { background: #D6EAF8; }
+.tabel-pokok tr.row-level2 td { background: var(--surface-2); font-style: italic; }
+.tabel-pokok tr.row-level2 td.col-no, .tabel-pokok tr.row-level2 td.col-nama { background: #f5f9fc; }
+.tabel-pokok tr.row-level3 td { background: var(--surface); }
+.tabel-pokok tr.row-total td  { background: var(--primary); color: #fff; font-weight: 700; }
+.tabel-pokok tr.row-total td.col-no, .tabel-pokok tr.row-total td.col-nama {
+  background: var(--primary); color: #fff;
+}
+
+/* Collapse toggle */
+.tabel-pokok tr.row-level1 td.col-nama { cursor: pointer; user-select: none; }
+.tabel-pokok tr.row-level1 td.col-nama:hover { background: #c5ddf2; }
+.collapse-icon { display: inline-block; width: 14px; margin-right: 4px; transition: transform 150ms; font-style: normal; }
+.collapsed .collapse-icon { transform: rotate(-90deg); }
+
+/* Indent */
+.tabel-pokok .indent-l2 { padding-left: 20px !important; }
+.tabel-pokok .indent-l3 { padding-left: 36px !important; }
+
+/* Hidden rows */
+.tabel-pokok tr.hidden { display: none; }
+
+/* Highlight cells */
+.tabel-pokok td.hl-neg { background: #FDEDEC !important; color: #C0392B; font-weight: 600; }
+.tabel-pokok td.hl-high { background: #EAFAF1 !important; color: #1E8449; font-weight: 600; }
+
+/* Hover row */
+.tabel-pokok tbody tr:not(.row-total):hover td { filter: brightness(0.97); }
+
+/* Legend */
+.tabel-legend {
+  display: flex; gap: 14px; padding: 8px 16px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.72rem; color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.tabel-legend span { display: flex; align-items: center; gap: 5px; }
+.leg-dot {
+  width: 10px; height: 10px; border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Loading state */
+.tabel-loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 20px; gap: 10px; color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Empty state */
+.tabel-empty {
+  text-align: center; padding: 60px 20px; color: var(--text-muted);
+}
+.tabel-empty .icon { font-size: 2.5rem; margin-bottom: 8px; }

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S3 — Dashboard Ringkasan PDRB | SIMULTAN Kaltara</title>
+  <meta name="description" content="Dashboard Ringkasan PDRB Kalimantan Utara — KPI, tren, distribusi, laju pertumbuhan, dan kelengkapan data">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/s3-dashboard.css">
+</head>
+<body>
+<div class="dash-shell">
+
+  <!-- ══ Sidebar ══════════════════════════════════════════════ -->
+  <nav class="dash-sidebar">
+    <div class="dash-sidebar-brand">
+      <div class="app-name">SIMULTAN · S3</div>
+      <div class="app-sub">Dashboard Ringkasan<br>PDRB Kalimantan Utara</div>
+      <a href="index.html" class="back-link" style="font-size:0.72rem;color:rgba(255,255,255,0.4);text-decoration:none;margin-top:8px;display:block">← Kembali ke Home</a>
+    </div>
+    <div style="padding:14px 0 4px">
+      <div style="padding:0 14px 6px;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3)">Menu</div>
+      <a href="s3-dashboard.html" class="dash-nav-link active">📊 Dashboard Ringkasan</a>
+      <a href="s3-tabel.html"     class="dash-nav-link">📋 Tabel Pokok S3</a>
+      <a href="s2-lk.html"        class="dash-nav-link">📄 Lembar Kerja S2</a>
+      <a href="s1-harga.html"     class="dash-nav-link">💰 Input S1.H — Harga</a>
+      <a href="s1-produksi.html"  class="dash-nav-link">🌾 Input S1.P — Produksi</a>
+    </div>
+  </nav>
+
+  <!-- ══ Main ════════════════════════════════════════════════ -->
+  <div class="dash-main">
+
+    <!-- Top Bar: Filter + Title -->
+    <div class="dash-topbar">
+      <h1>📊 Dashboard Ringkasan PDRB</h1>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label for="d-wilayah">Wilayah</label>
+        <select id="d-wilayah"></select>
+        <label for="d-tahun">Tahun</label>
+        <select id="d-tahun"></select>
+        <button class="btn btn-primary btn-sm" id="btn-refresh">↻ Perbarui</button>
+      </div>
+    </div>
+
+    <div class="dash-body">
+
+      <!-- ══ KPI Cards ════════════════════════════════════════ -->
+      <div class="section-hdr">📌 Indikator Utama</div>
+      <div class="kpi-row" id="kpi-row">
+        <!-- 4 KPI cards rendered by JS -->
+        <div class="kpi-card"><div class="kpi-label">PDRB ADHB</div><div class="kpi-value" id="kpi-adhb-val">—</div><div class="kpi-sub">Juta Rupiah</div><div id="kpi-adhb-delta"></div></div>
+        <div class="kpi-card"><div class="kpi-label">PDRB ADHK 2010</div><div class="kpi-value" id="kpi-adhk-val">—</div><div class="kpi-sub">Juta Rupiah</div><div id="kpi-adhk-delta"></div></div>
+        <div class="kpi-card"><div class="kpi-label">Laju Pertumbuhan</div><div class="kpi-value" id="kpi-laju-val">—</div><div class="kpi-sub">Tahun ke Tahun (ADHK)</div><div id="kpi-laju-sub"></div></div>
+        <div class="kpi-card"><div class="kpi-label">Distribusi Terbesar</div><div class="kpi-value" id="kpi-dist-val">—</div><div class="kpi-sub" id="kpi-dist-nama">—</div><div id="kpi-dist-delta"></div></div>
+      </div>
+
+      <!-- ══ Chart Row 1: Tren + Donut ══════════════════════ -->
+      <div class="section-hdr">📈 Tren & Struktur PDRB</div>
+      <div class="chart-row">
+        <!-- Tren PDRB -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">Grafik 1 — Tren PDRB 2008–Terkini</div>
+            <div class="chart-sub">ADHB (biru) vs ADHK 2010 (oranye)</div>
+          </div>
+          <div class="chart-body">
+            <div class="chart-canvas-wrap" style="height:260px">
+              <canvas id="chart-tren"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Donut Distribusi -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">Grafik 2 — Struktur PDRB</div>
+            <div class="chart-sub" id="donut-subtitle">Distribusi 17 kategori</div>
+          </div>
+          <div class="chart-body">
+            <div class="chart-canvas-wrap" style="height:260px">
+              <canvas id="chart-donut"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Chart Row 2: Laju Bar + Triwulanan ════════════ -->
+      <div class="section-hdr">📊 Laju Pertumbuhan & Ringkasan Triwulanan</div>
+      <div class="chart-row-2">
+        <!-- Bar Chart Laju -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">Grafik 3 — Laju Pertumbuhan per Kategori</div>
+            <div class="chart-sub">Diurutkan tertinggi → terendah</div>
+          </div>
+          <div class="chart-body">
+            <div class="chart-canvas-wrap" style="height:360px">
+              <canvas id="chart-laju"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Triwulanan -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">Ringkasan Triwulanan ADHK</div>
+            <div class="chart-sub">Nilai Tambah Bruto per triwulan</div>
+          </div>
+          <div class="chart-body" style="padding:0">
+            <div class="tw-scroll" id="tw-container">
+              <div class="dash-loading-overlay"><div class="spinner"></div> Memuat…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Status Kelengkapan ══════════════════════════════ -->
+      <div class="section-hdr">📋 Status Kelengkapan Data Input</div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-title" id="kel-title">Progress Input Data</div>
+          <div class="chart-sub">Per wilayah kab/kota</div>
+        </div>
+        <div class="chart-body">
+          <div class="kel-grid" id="kel-container">
+            <div class="kel-loading"><div class="spinner" style="margin:0 auto 8px"></div>Memuat…</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dash-body -->
+  </div><!-- /dash-main -->
+</div><!-- /dash-shell -->
+
+<div id="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/s3-dashboard.js"></script>
+</body>
+</html>
