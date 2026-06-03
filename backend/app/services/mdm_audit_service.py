@@ -19,12 +19,13 @@ def log_insert(
     record_id: int,
     user_nama: str = "System",
     alasan: Optional[str] = None,
+    aksi: str = "INSERT",
 ) -> None:
     """Log aksi INSERT pada tabel master."""
     db.add(AuditMaster(
         tabel_nama=tabel,
         record_id=record_id,
-        aksi="INSERT",
+        aksi=aksi,
         user_nama=user_nama,
         alasan=alasan,
         waktu=datetime.now(),
@@ -42,6 +43,7 @@ def log_update(
     user_nama: str = "System",
     alasan: Optional[str] = None,
     berlaku_mulai: Optional[int] = None,
+    aksi: str = "UPDATE",
 ) -> None:
     """Log aksi UPDATE satu kolom pada tabel master."""
     # Hanya catat jika ada perubahan nyata
@@ -50,7 +52,7 @@ def log_update(
     db.add(AuditMaster(
         tabel_nama=tabel,
         record_id=record_id,
-        aksi="UPDATE",
+        aksi=aksi,
         kolom_ubah=kolom,
         nilai_lama=str(nilai_lama) if nilai_lama is not None else None,
         nilai_baru=str(nilai_baru) if nilai_baru is not None else None,
@@ -71,6 +73,7 @@ def log_update_many(
     alasan: Optional[str] = None,
     berlaku_mulai: Optional[int] = None,
     skip_columns: Optional[list[str]] = None,
+    aksi: str = "UPDATE",
 ) -> list[str]:
     """
     Log UPDATE untuk banyak kolom sekaligus.
@@ -88,6 +91,7 @@ def log_update_many(
             log_update(
                 db, tabel, record_id, kolom,
                 nilai_lama, nilai_baru, user_nama, alasan, berlaku_mulai,
+                aksi=aksi
             )
     return changed
 

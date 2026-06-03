@@ -1,412 +1,100 @@
-INFO:     Started server process [120443]
+INFO:     Started server process [183576]
 INFO:     Waiting for application startup.
-2026-06-03 00:05:14,510 INFO sqlalchemy.engine.Engine BEGIN (implicit)
-2026-06-03 00:05:14,510 INFO sqlalchemy.engine.Engine SELECT 1
-2026-06-03 00:05:14,510 INFO sqlalchemy.engine.Engine [generated in 0.00033s] ()
-2026-06-03 00:05:14,511 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-03 01:35:53,047 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:35:53,048 INFO sqlalchemy.engine.Engine SELECT 1
+2026-06-03 01:35:53,048 INFO sqlalchemy.engine.Engine [generated in 0.00077s] ()
+2026-06-03 01:35:53,048 INFO sqlalchemy.engine.Engine ROLLBACK
 INFO:     Application startup complete.
-ERROR:    [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 [SIKALTARA] ✅ Koneksi database berhasil
-INFO:     127.0.0.1:41300 - "GET /app/admin/master/komoditas.html HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41304 - "GET /app/css/mdm.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41300 - "GET /app/css/main.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41328 - "GET /app/admin/master/master-komoditas.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41318 - "GET /app/js/mdm-utils.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41308 - "GET /app/js/mdm-api.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41318 - "GET /api/master/komoditas?q=&kategori=&status=aktif&kbli= HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:41328 - "GET /api/mdm/satuan HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 144, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3319, in raw_connection
-    return self.pool.connect()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 448, in connect
-    return _ConnectionFairy._checkout(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1272, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
-    rec = pool._do_get()
-          ^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 178, in _do_get
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 176, in _do_get
-    return self._create_connection()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 389, in _create_connection
-    return _ConnectionRecord(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
-    self.__connect()
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 667, in connect
-    return dialect.connect(*cargs_tup, **cparams)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 630, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 421, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
-    await super().__call__(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/cors.py", line 88, in __call__
-    await self.app(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
-    await route.handle(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
-    response = await f(request)
-               ^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
-    return await run_in_threadpool(dependant.call, **values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
-    return await anyio.to_thread.run_sync(func)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
-    return await get_async_backend().run_sync_in_worker_thread(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
-    return await future
-           ^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
-    result = context.run(func, *args)
-             ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/backend/app/api/mdm_satuan.py", line 23, in list_satuan
-    satuan_list = q.order_by(MasterSatuan.kode).all()
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2711, in all
-    return self._iter().all()  # type: ignore
-           ^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2864, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2372, in execute
-    return self._execute_internal(
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2260, in _execute_internal
-    conn = self._connection_for_bind(bind)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2112, in _connection_for_bind
-    return trans._connection_for_bind(engine, execution_options)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in _connection_for_bind
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
-    ret_value = fn(self, *arg, **kw)
-                ^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1191, in _connection_for_bind
-    conn = bind.connect()
-           ^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3295, in connect
-    return self._connection_cls(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
-    Connection._handle_dbapi_exception_noconnection(
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2450, in _handle_dbapi_exception_noconnection
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 144, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3319, in raw_connection
-    return self.pool.connect()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 448, in connect
-    return _ConnectionFairy._checkout(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1272, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
-    rec = pool._do_get()
-          ^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 178, in _do_get
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 176, in _do_get
-    return self._create_connection()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 389, in _create_connection
-    return _ConnectionRecord(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
-    self.__connect()
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 667, in connect
-    return dialect.connect(*cargs_tup, **cparams)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 630, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-
-(Background on this error at: https://sqlalche.me/e/20/e3q8)
-INFO:     127.0.0.1:41308 - "GET /api/mdm/kategori?aktif_only=true HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 144, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3319, in raw_connection
-    return self.pool.connect()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 448, in connect
-    return _ConnectionFairy._checkout(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1272, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
-    rec = pool._do_get()
-          ^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 178, in _do_get
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 176, in _do_get
-    return self._create_connection()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 389, in _create_connection
-    return _ConnectionRecord(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
-    self.__connect()
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 667, in connect
-    return dialect.connect(*cargs_tup, **cparams)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 630, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 421, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
-    await super().__call__(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/cors.py", line 88, in __call__
-    await self.app(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
-    await route.handle(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
-    await self.app(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
-    response = await f(request)
-               ^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
-    return await run_in_threadpool(dependant.call, **values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
-    return await anyio.to_thread.run_sync(func)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
-    return await get_async_backend().run_sync_in_worker_thread(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
-    return await future
-           ^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
-    result = context.run(func, *args)
-             ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/backend/app/api/mdm_kategori.py", line 67, in list_kategori
-    rows = query.order_by(KategoriPdrb.urutan, KategoriPdrb.kode).all()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2711, in all
-    return self._iter().all()  # type: ignore
-           ^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2864, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2372, in execute
-    return self._execute_internal(
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2260, in _execute_internal
-    conn = self._connection_for_bind(bind)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2112, in _connection_for_bind
-    return trans._connection_for_bind(engine, execution_options)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in _connection_for_bind
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
-    ret_value = fn(self, *arg, **kw)
-                ^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1191, in _connection_for_bind
-    conn = bind.connect()
-           ^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3295, in connect
-    return self._connection_cls(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
-    Connection._handle_dbapi_exception_noconnection(
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2450, in _handle_dbapi_exception_noconnection
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 144, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3319, in raw_connection
-    return self.pool.connect()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 448, in connect
-    return _ConnectionFairy._checkout(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1272, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 712, in checkout
-    rec = pool._do_get()
-          ^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 178, in _do_get
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 176, in _do_get
-    return self._create_connection()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 389, in _create_connection
-    return _ConnectionRecord(self)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 674, in __init__
-    self.__connect()
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 900, in __connect
-    with util.safe_reraise():
-         ^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 667, in connect
-    return dialect.connect(*cargs_tup, **cparams)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 630, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages/psycopg2/__init__.py", line 122, in connect
-    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
-	Is the server running on that host and accepting TCP/IP connections?
-
-(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-06-03 01:36:40,490 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:36:40,539 INFO sqlalchemy.engine.Engine SELECT count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif = 1
+2026-06-03 01:36:40,539 INFO sqlalchemy.engine.Engine [generated in 0.00034s] ()
+2026-06-03 01:36:40,543 INFO sqlalchemy.engine.Engine SELECT count(kategori_pdrb.id) AS count_1
+FROM kategori_pdrb
+2026-06-03 01:36:40,543 INFO sqlalchemy.engine.Engine [generated in 0.00022s] ()
+2026-06-03 01:36:40,545 INFO sqlalchemy.engine.Engine SELECT count(rasio_referensi.id) AS count_1
+FROM rasio_referensi
+2026-06-03 01:36:40,545 INFO sqlalchemy.engine.Engine [generated in 0.00025s] ()
+2026-06-03 01:36:40,548 INFO sqlalchemy.engine.Engine SELECT audit_master.id AS audit_master_id, audit_master.tabel_nama AS audit_master_tabel_nama, audit_master.record_id AS audit_master_record_id, audit_master.aksi AS audit_master_aksi, audit_master.kolom_ubah AS audit_master_kolom_ubah, audit_master.nilai_lama AS audit_master_nilai_lama, audit_master.nilai_baru AS audit_master_nilai_baru, audit_master.user_id AS audit_master_user_id, audit_master.user_nama AS audit_master_user_nama, audit_master.waktu AS audit_master_waktu, audit_master.alasan AS audit_master_alasan, audit_master.berlaku_mulai AS audit_master_berlaku_mulai
+FROM audit_master ORDER BY audit_master.waktu DESC
+ LIMIT ? OFFSET ?
+2026-06-03 01:36:40,548 INFO sqlalchemy.engine.Engine [generated in 0.00020s] (5, 0)
+INFO:     127.0.0.1:37334 - "GET /api/master/summary HTTP/1.1" 200 OK
+2026-06-03 01:36:40,551 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:33390 - "GET /app/admin/master/komoditas.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33390 - "GET /app/css/main.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33394 - "GET /app/css/mdm.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33410 - "GET /app/js/mdm-api.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33414 - "GET /app/js/mdm-utils.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33418 - "GET /app/admin/master/master-komoditas.js HTTP/1.1" 200 OK
+2026-06-03 01:37:37,082 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:37:37,084 INFO sqlalchemy.engine.Engine SELECT master_satuan.id AS master_satuan_id, master_satuan.kode AS master_satuan_kode, master_satuan.nama AS master_satuan_nama, master_satuan.keterangan AS master_satuan_keterangan, master_satuan.aktif AS master_satuan_aktif
+FROM master_satuan
+WHERE master_satuan.aktif IS 1 ORDER BY master_satuan.kode
+2026-06-03 01:37:37,084 INFO sqlalchemy.engine.Engine [generated in 0.00030s] ()
+2026-06-03 01:37:37,087 INFO sqlalchemy.engine.Engine SELECT komoditas.satuan_produksi AS komoditas_satuan_produksi, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.satuan_produksi
+2026-06-03 01:37:37,087 INFO sqlalchemy.engine.Engine [generated in 0.00021s] ()
+INFO:     127.0.0.1:33418 - "GET /api/mdm/satuan HTTP/1.1" 200 OK
+2026-06-03 01:37:37,093 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-03 01:37:37,095 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:37:37,096 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan
+2026-06-03 01:37:37,096 INFO sqlalchemy.engine.Engine [generated in 0.00019s] ()
+2026-06-03 01:37:37,098 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:37:37,099 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan, kategori_pdrb.kode
+2026-06-03 01:37:37,100 INFO sqlalchemy.engine.Engine [generated in 0.00017s] ()
+2026-06-03 01:37:37,102 INFO sqlalchemy.engine.Engine SELECT komoditas.kategori_kode AS komoditas_kategori_kode, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.kategori_kode
+2026-06-03 01:37:37,102 INFO sqlalchemy.engine.Engine [generated in 0.00025s] ()
+2026-06-03 01:37:37,112 INFO sqlalchemy.engine.Engine SELECT komoditas.id AS komoditas_id, komoditas.kode_internal AS komoditas_kode_internal, komoditas.nama AS komoditas_nama, komoditas.kategori_kode AS komoditas_kategori_kode, komoditas.satuan_produksi AS komoditas_satuan_produksi, komoditas.satuan_harga AS komoditas_satuan_harga, komoditas.faktor_konversi AS komoditas_faktor_konversi, komoditas.wujud_produksi AS komoditas_wujud_produksi, komoditas.aktif AS komoditas_aktif, komoditas.klui_1990 AS komoditas_klui_1990, komoditas.kbli_2005 AS komoditas_kbli_2005, komoditas.kbli_2009 AS komoditas_kbli_2009, komoditas.kbki_2010 AS komoditas_kbki_2010, komoditas.identitas AS komoditas_identitas, komoditas.pdrb_kbli_kode AS komoditas_pdrb_kbli_kode, komoditas.pdrb_kbli_uraian AS komoditas_pdrb_kbli_uraian, komoditas.klui_uraian AS komoditas_klui_uraian, komoditas.catatan_varietas AS komoditas_catatan_varietas, komoditas.indeks_deflator AS komoditas_indeks_deflator, komoditas.indeks_dbl_defl AS komoditas_indeks_dbl_defl, komoditas.urutan_tampil AS komoditas_urutan_tampil, komoditas.berlaku_mulai AS komoditas_berlaku_mulai, komoditas.berlaku_sampai AS komoditas_berlaku_sampai, komoditas.digantikan_oleh AS komoditas_digantikan_oleh, komoditas.keterangan AS komoditas_keterangan, komoditas.produk_jadi AS komoditas_produk_jadi, komoditas.punya_wip AS komoditas_punya_wip, komoditas.punya_cbr AS komoditas_punya_cbr, komoditas.punya_output_ikutan AS komoditas_punya_output_ikutan, komoditas.metode_harga AS komoditas_metode_harga, kategori_pdrb_1.id AS kategori_pdrb_1_id, kategori_pdrb_1.kode AS kategori_pdrb_1_kode, kategori_pdrb_1.nama AS kategori_pdrb_1_nama, kategori_pdrb_1.parent_kode AS kategori_pdrb_1_parent_kode, kategori_pdrb_1.level AS kategori_pdrb_1_level, kategori_pdrb_1.metode_adhb AS kategori_pdrb_1_metode_adhb, kategori_pdrb_1.metode_adhk AS kategori_pdrb_1_metode_adhk, kategori_pdrb_1.urutan AS kategori_pdrb_1_urutan
+FROM komoditas LEFT OUTER JOIN kategori_pdrb AS kategori_pdrb_1 ON komoditas.kategori_kode = kategori_pdrb_1.kode
+WHERE komoditas.aktif = 1
+2026-06-03 01:37:37,113 INFO sqlalchemy.engine.Engine [generated in 0.00039s] ()
+INFO:     127.0.0.1:33410 - "GET /api/mdm/kategori?aktif_only=true HTTP/1.1" 200 OK
+2026-06-03 01:37:37,114 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:33414 - "GET /api/master/komoditas?q=&kategori=&status=aktif&kbli= HTTP/1.1" 200 OK
+2026-06-03 01:37:37,119 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:39316 - "GET /app/admin/master/komoditas.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39316 - "GET /app/css/main.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39320 - "GET /app/css/mdm.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39324 - "GET /app/js/mdm-api.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39326 - "GET /app/js/mdm-utils.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39328 - "GET /app/admin/master/master-komoditas.js HTTP/1.1" 200 OK
+2026-06-03 01:45:32,498 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:45:32,500 INFO sqlalchemy.engine.Engine SELECT master_satuan.id AS master_satuan_id, master_satuan.kode AS master_satuan_kode, master_satuan.nama AS master_satuan_nama, master_satuan.keterangan AS master_satuan_keterangan, master_satuan.aktif AS master_satuan_aktif
+FROM master_satuan
+WHERE master_satuan.aktif IS 1 ORDER BY master_satuan.kode
+2026-06-03 01:45:32,500 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,503 INFO sqlalchemy.engine.Engine SELECT komoditas.satuan_produksi AS komoditas_satuan_produksi, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.satuan_produksi
+2026-06-03 01:45:32,503 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+INFO:     127.0.0.1:39328 - "GET /api/mdm/satuan HTTP/1.1" 200 OK
+2026-06-03 01:45:32,507 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-03 01:45:32,507 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:45:32,508 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan, kategori_pdrb.kode
+2026-06-03 01:45:32,508 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,509 INFO sqlalchemy.engine.Engine SELECT komoditas.kategori_kode AS komoditas_kategori_kode, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.kategori_kode
+2026-06-03 01:45:32,509 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+INFO:     127.0.0.1:39324 - "GET /api/mdm/kategori?aktif_only=true HTTP/1.1" 200 OK
+2026-06-03 01:45:32,511 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:45:32,511 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan
+2026-06-03 01:45:32,511 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,512 INFO sqlalchemy.engine.Engine SELECT komoditas.id AS komoditas_id, komoditas.kode_internal AS komoditas_kode_internal, komoditas.nama AS komoditas_nama, komoditas.kategori_kode AS komoditas_kategori_kode, komoditas.satuan_produksi AS komoditas_satuan_produksi, komoditas.satuan_harga AS komoditas_satuan_harga, komoditas.faktor_konversi AS komoditas_faktor_konversi, komoditas.wujud_produksi AS komoditas_wujud_produksi, komoditas.aktif AS komoditas_aktif, komoditas.klui_1990 AS komoditas_klui_1990, komoditas.kbli_2005 AS komoditas_kbli_2005, komoditas.kbli_2009 AS komoditas_kbli_2009, komoditas.kbki_2010 AS komoditas_kbki_2010, komoditas.identitas AS komoditas_identitas, komoditas.pdrb_kbli_kode AS komoditas_pdrb_kbli_kode, komoditas.pdrb_kbli_uraian AS komoditas_pdrb_kbli_uraian, komoditas.klui_uraian AS komoditas_klui_uraian, komoditas.catatan_varietas AS komoditas_catatan_varietas, komoditas.indeks_deflator AS komoditas_indeks_deflator, komoditas.indeks_dbl_defl AS komoditas_indeks_dbl_defl, komoditas.urutan_tampil AS komoditas_urutan_tampil, komoditas.berlaku_mulai AS komoditas_berlaku_mulai, komoditas.berlaku_sampai AS komoditas_berlaku_sampai, komoditas.digantikan_oleh AS komoditas_digantikan_oleh, komoditas.keterangan AS komoditas_keterangan, komoditas.produk_jadi AS komoditas_produk_jadi, komoditas.punya_wip AS komoditas_punya_wip, komoditas.punya_cbr AS komoditas_punya_cbr, komoditas.punya_output_ikutan AS komoditas_punya_output_ikutan, komoditas.metode_harga AS komoditas_metode_harga, kategori_pdrb_1.id AS kategori_pdrb_1_id, kategori_pdrb_1.kode AS kategori_pdrb_1_kode, kategori_pdrb_1.nama AS kategori_pdrb_1_nama, kategori_pdrb_1.parent_kode AS kategori_pdrb_1_parent_kode, kategori_pdrb_1.level AS kategori_pdrb_1_level, kategori_pdrb_1.metode_adhb AS kategori_pdrb_1_metode_adhb, kategori_pdrb_1.metode_adhk AS kategori_pdrb_1_metode_adhk, kategori_pdrb_1.urutan AS kategori_pdrb_1_urutan
+FROM komoditas LEFT OUTER JOIN kategori_pdrb AS kategori_pdrb_1 ON komoditas.kategori_kode = kategori_pdrb_1.kode
+WHERE komoditas.aktif = 1
+2026-06-03 01:45:32,512 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,513 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:39320 - "GET /api/master/komoditas?q=&kategori=&status=aktif&kbli= HTTP/1.1" 200 OK
+2026-06-03 01:45:32,516 INFO sqlalchemy.engine.Engine ROLLBACK

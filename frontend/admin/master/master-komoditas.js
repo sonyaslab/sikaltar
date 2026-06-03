@@ -64,7 +64,10 @@ async function loadSatuan() {
         const data = await res.json();
         satuanOptions = data;
         const sel = document.getElementById('new-satuan');
-        if (sel) sel.innerHTML = data.map(s => `<option value="${s.nama}">${s.nama}</option>`).join('');
+        const detSel = document.getElementById('det-satuan');
+        const opts = data.map(s => `<option value="${s.nama}">${s.nama}</option>`).join('');
+        if (sel) sel.innerHTML = opts;
+        if (detSel) detSel.innerHTML = opts;
     } catch (err) {}
 }
 
@@ -74,10 +77,12 @@ async function loadKategori() {
         kategoriOptions = data;
         const filterSel = document.getElementById('filter-kategori');
         const addSel = document.getElementById('new-kategori');
+        const detSel = document.getElementById('det-kategori');
 
         const opts = data.map(k => `<option value="${k.kode}">${k.kode} ${k.nama}</option>`).join('');
         if (filterSel) filterSel.innerHTML += opts;
         if (addSel) addSel.innerHTML = opts;
+        if (detSel) detSel.innerHTML = opts;
     } catch (err) {}
 }
 
@@ -160,8 +165,8 @@ function renderKomoditasRow(row, idx) {
             <td style="text-align:center">${renderToggle(row.id, 'aktif', row.aktif)}</td>
             <td>
                 <div style="display:flex; gap:4px">
+                    <button class="btn btn-sm btn-primary" onclick="openDetail(${row.id})">Edit Detail</button>
                     <button class="btn btn-sm btn-ghost" onclick="showHistory(${row.id}, '${row.nama}')">Riwayat</button>
-                    <button class="btn btn-sm btn-danger-ghost" onclick="deleteKomoditas(${row.id})">🗑️</button>
                 </div>
             </td>
         </tr>
@@ -401,6 +406,224 @@ async function showHistory(id, nama) {
     } catch (err) { list.innerHTML = `<li>Error: ${err.message}</li>`; }
 }
 function closeHistoryModal() { document.getElementById('history-modal').classList.remove('open'); }
+
+// ─── Import Excel ────────────────────────────────────────────────────────────
+
+let lastImportDiff = null;
+
+function showImportModal() {
+    document.getElementById('import-step-1').style.display = 'block';
+    document.getElementById('import-step-2').style.display = 'none';
+    document.getElementById('btn-apply-import').style.display = 'none';
+    document.getElementById('import-modal').classList.add('open');
+}
+
+function closeImportModal() {
+    document.getElementById('import-modal').classList.remove('open');
+    lastImportDiff = null;
+}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('import-file');
+
+if (dropzone) {
+    dropzone.onclick = () => fileInput.click();
+    dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('dragover'); };
+    dropzone.ondragleave = () => dropzone.classList.remove('dragover');
+    dropzone.ondrop = e => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    };
+}
+if (fileInput) fileInput.onchange = e => { if (e.target.files.length) handleFile(e.target.files[0]); };
+
+async function handleFile(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch('/api/master/komoditas/import/preview', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Gagal memproses file Excel');
+        const diff = await res.json();
+        lastImportDiff = diff;
+        renderImportPreview(diff);
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+function renderImportPreview(diff) {
+    document.getElementById('import-step-1').style.display = 'none';
+    document.getElementById('import-step-2').style.display = 'block';
+    document.getElementById('btn-apply-import').style.display = 'block';
+    const summary = document.getElementById('import-summary');
+    summary.innerHTML = `
+        <div class="import-stat ok"><div class="num">${diff.unchanged.length}</div><div class="lbl">Tidak Berubah</div></div>
+        <div class="import-stat changed"><div class="num">${diff.changed_detail.length}</div><div class="lbl">Berubah</div></div>
+        <div class="import-stat new"><div class="num">${diff.new_detail.length}</div><div class="lbl">Baru</div></div>
+        <div class="import-stat missing"><div class="num">${diff.missing_detail.length}</div><div class="lbl">Hilang</div></div>
+    `;
+    const tbody = document.getElementById('import-diff-body');
+    tbody.innerHTML = diff.changed_detail.map((c, i) => `
+        <tr>
+            <td><input type="checkbox" class="import-check" data-type="changed" data-index="${i}" checked></td>
+            <td><strong>${c.key}</strong></td>
+            <td colspan="3">${renderDiffDetail(c.diffs)}</td>
+        </tr>
+    `).join('');
+    document.getElementById('import-new-list').innerHTML = diff.new_detail.map((n, i) => `
+        <label style="display:inline-block; margin-right:10px; background:#f0fdf4; padding:2px 8px; border-radius:4px">
+            <input type="checkbox" class="import-check" data-type="new" data-index="${i}" checked> + ${n.key}
+        </label>
+    `).join('');
+    document.getElementById('import-missing-list').innerHTML = diff.missing_detail.map((m, i) => `
+        <label style="display:inline-block; margin-right:10px; background:#fff1f2; padding:2px 8px; border-radius:4px">
+            <input type="checkbox" class="import-check" data-type="missing" data-index="${i}"> ─ ${m.nama}
+        </label>
+    `).join('');
+}
+
+function toggleAllImport(el) { document.querySelectorAll('.import-check').forEach(c => c.checked = el.checked); }
+
+async function applyImport() {
+    if (!lastImportDiff) return;
+    const selectedChanged = [];
+    const selectedNew = [];
+    const selectedMissing = [];
+    document.querySelectorAll('.import-check:checked').forEach(c => {
+        const idx = parseInt(c.dataset.index);
+        if (c.dataset.type === 'changed') selectedChanged.push(lastImportDiff.changed_detail[idx]);
+        else if (c.dataset.type === 'new') selectedNew.push(lastImportDiff.new_detail[idx]);
+        else if (c.dataset.type === 'missing') selectedMissing.push(lastImportDiff.missing_detail[idx]);
+    });
+    try {
+        const res = await fetch('/api/master/komoditas/import/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ diff: { changed: selectedChanged, new: selectedNew, missing: selectedMissing }, apply_new: true, apply_changed: true })
+        });
+        if (!res.ok) throw new Error('Gagal menerapkan import');
+        const result = await res.json();
+        showToast(result.message);
+        closeImportModal();
+        fetchData();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ─── Detail Drawer ───────────────────────────────────────────────────────────
+
+let currentDetailId = null;
+
+async function openDetail(id) {
+    currentDetailId = id;
+    try {
+        const data = await fetch(`/api/master/komoditas/${id}`).then(r => r.json());
+        document.getElementById('det-nama-header').innerText = data.nama;
+        document.getElementById('det-kat-header').innerText = data.kategori_kode;
+        document.getElementById('det-kode-header').innerText = data.kode_internal;
+        document.getElementById('det-status-badge').innerHTML = fmtStatus(data.aktif);
+        document.getElementById('det-nama').value = data.nama;
+        document.getElementById('det-kategori').value = data.kategori_kode;
+        document.getElementById('det-wujud').value = data.wujud_produksi || '';
+        document.getElementById('det-satuan').value = data.satuan_produksi || '';
+        document.getElementById('det-satuan-harga').value = data.satuan_harga || '';
+        document.getElementById('det-varietas').value = data.catatan_varietas || '';
+        document.getElementById('det-klui-uraian').value = data.klui_uraian || '';
+        document.getElementById('det-mulai').value = data.berlaku_mulai || '';
+        document.getElementById('det-sampai').value = data.berlaku_sampai || '';
+        document.getElementById('det-keterangan').value = data.keterangan || '';
+        document.getElementById('det-klui-1990').value = data.klui_1990 || '';
+        document.getElementById('det-kbli-2005').value = data.kbli_2005 || '';
+        document.getElementById('det-kbli-2009').value = data.kbli_2009 || '';
+        document.getElementById('det-kbki-2010').value = data.kbki_2010 || '';
+        document.getElementById('det-identitas').value = data.identitas || '';
+        document.getElementById('det-pdrb-kode').value = data.pdrb_kbli_kode || '';
+        document.getElementById('det-pdrb-uraian').value = data.pdrb_kbli_uraian || '';
+        document.getElementById('det-deflator').value = data.indeks_deflator || '';
+        document.getElementById('det-dbl-defl').value = data.indeks_dbl_defl || '';
+        document.getElementById('det-konversi').value = data.faktor_konversi || '';
+        document.getElementById('det-produk-jadi').value = data.produk_jadi || '';
+        document.getElementById('det-punya-wip').checked = data.punya_wip;
+        document.getElementById('det-punya-cbr').checked = data.punya_cbr;
+        document.getElementById('det-punya-ikutan').checked = data.punya_output_ikutan;
+        document.getElementById('det-metode-harga').value = data.metode_harga || 'Harga Produsen';
+        updateFormulaPreview(data);
+        loadDetailHistory(id);
+        document.getElementById('detail-drawer-overlay').classList.add('open');
+        document.getElementById('detail-drawer').classList.add('open');
+        initMdmTabs('.mdm-drawer');
+    } catch (err) { showToast('Gagal memuat detail: ' + err.message, 'error'); }
+}
+
+function closeDetail() {
+    document.getElementById('detail-drawer-overlay').classList.remove('open');
+    document.getElementById('detail-drawer').classList.remove('open');
+    currentDetailId = null;
+}
+
+async function saveDetail() {
+    const payload = {
+        nama: document.getElementById('det-nama').value,
+        kategori_kode: document.getElementById('det-kategori').value,
+        wujud_produksi: document.getElementById('det-wujud').value,
+        satuan_produksi: document.getElementById('det-satuan').value,
+        catatan_varietas: document.getElementById('det-varietas').value,
+        klui_uraian: document.getElementById('det-klui-uraian').value,
+        berlaku_mulai: parseInt(document.getElementById('det-mulai').value) || null,
+        berlaku_sampai: parseInt(document.getElementById('det-sampai').value) || null,
+        keterangan: document.getElementById('det-keterangan').value,
+        klui_1990: document.getElementById('det-klui-1990').value,
+        kbli_2005: document.getElementById('det-kbli-2005').value,
+        kbli_2009: document.getElementById('det-kbli-2009').value,
+        kbki_2010: document.getElementById('det-kbki-2010').value,
+        identitas: document.getElementById('det-identitas').value,
+        pdrb_kbli_kode: document.getElementById('det-pdrb-kode').value,
+        pdrb_kbli_uraian: document.getElementById('det-pdrb-uraian').value,
+        indeks_deflator: document.getElementById('det-deflator').value,
+        indeks_dbl_defl: document.getElementById('det-dbl-defl').value,
+        faktor_konversi: parseFloat(document.getElementById('det-konversi').value) || null,
+        produk_jadi: document.getElementById('det-produk-jadi').value,
+        punya_wip: document.getElementById('det-punya-wip').checked,
+        punya_cbr: document.getElementById('det-punya-cbr').checked,
+        punya_output_ikutan: document.getElementById('det-punya-ikutan').checked,
+        metode_harga: document.getElementById('det-metode-harga').value,
+    };
+    try {
+        const res = await fetch(`/api/master/komoditas/${currentDetailId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Gagal menyimpan perubahan');
+        showToast('Perubahan berhasil disimpan');
+        closeDetail();
+        fetchData();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function loadDetailHistory(id) {
+    const list = document.getElementById('det-history-list');
+    list.innerHTML = '<li>Memuat riwayat...</li>';
+    try {
+        const res = await fetch(`/api/master/komoditas/${id}/riwayat`);
+        const data = await res.json();
+        if (!data.length) { list.innerHTML = '<li style="padding:20px; color:var(--text-muted)">Belum ada riwayat perubahan.</li>'; return; }
+        list.innerHTML = data.map(r => `
+            <li class="audit-item">
+                <div class="audit-dot ${r.aksi.toLowerCase()}"></div>
+                <div class="audit-content">
+                    <div class="audit-meta">${fmtDate(r.waktu)} — ${r.user_nama}</div>
+                    <div class="audit-text"><strong>${r.aksi}</strong> ${r.kolom_ubah || ''}</div>
+                    <div class="audit-diff">${r.nilai_lama || '—'} → ${r.nilai_baru || '—'}</div>
+                </div>
+            </li>
+        `).join('');
+    } catch (err) {}
+}
+
+function updateFormulaPreview(data) {
+    const preview = document.getElementById('det-formula-preview');
+    const wipPart = data.punya_wip ? 'Output Utama × r_WIP' : '[tidak ada]';
+    const ikutanPart = data.punya_output_ikutan ? 'Output Utama × r_OS' : '[tidak ada]';
+    preview.innerHTML = `Output Utama = Kuantum × Harga Berlaku<br>Output Ikutan = ${ikutanPart}<br>WIP = ${wipPart}<br>Konversi = ${data.faktor_konversi ? `CPO = TBS × ${data.faktor_konversi}%` : 'tidak ada'}<br>NTB = Output Total - (Output Total × r_KA)`;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 function debounce(func, wait) { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func(...args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; }
 function showToast(msg, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -411,3 +634,4 @@ function showToast(msg, type = 'success') {
     container.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
+function exportData() { window.open('/api/master/komoditas?export=csv', '_blank'); }
