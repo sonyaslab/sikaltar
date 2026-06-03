@@ -22,6 +22,10 @@ dependencies = [
     # Data validation
     "pydantic>=2.7.0",
     "pydantic-settings>=2.2.0",
+    # Auth
+    "python-jose[cryptography]>=3.3.0",  # JWT token encode/decode
+    "passlib[bcrypt]>=1.7.4",            # Password hashing bcrypt
+    "python-multipart>=0.0.9",           # Form data untuk OAuth2
     # Utilities
     "python-dotenv>=1.0.1",
     "structlog>=24.1.0",           # Structured logging

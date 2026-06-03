@@ -1,4 +1,4 @@
-﻿/**
+/**
  * api.js — SIKALTARA API Client
  * Fetch wrapper dengan error handling, toast notification, dan retry.
  */
@@ -11,18 +11,41 @@ const SUMBER_DATA_OPTIONS = [
   'PLN', 'Pertamina', 'Data Primer', 'Lainnya',
 ];
 
-/** Fetch JSON dari endpoint API. */
+/** Fetch JSON dari endpoint API. Otomatis menyertakan JWT Bearer token. */
 async function apiFetch(path, options = {}) {
-  const url = `${API_BASE}/api${path}`;
+  const url   = `${API_BASE}/api${path}`;
+  const token = localStorage.getItem('sikaltar_token');
+
   const defaults = {
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    headers: {
+      'Content-Type':  'application/json',
+      'Accept':        'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
   };
-  const config = { ...defaults, ...options };
+
+  const config = {
+    ...defaults,
+    ...options,
+    headers: { ...defaults.headers, ...(options.headers || {}) },
+  };
+
   if (config.body && typeof config.body === 'object') {
     config.body = JSON.stringify(config.body);
   }
 
   const res = await fetch(url, config);
+
+  // Token expired / invalid → redirect ke login
+  if (res.status === 401) {
+    localStorage.removeItem('sikaltar_token');
+    localStorage.removeItem('sikaltar_role');
+    localStorage.removeItem('sikaltar_wilayah');
+    localStorage.removeItem('sikaltar_nama');
+    window.location.href = '/app/login.html';
+    return;
+  }
+
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`;
     try {

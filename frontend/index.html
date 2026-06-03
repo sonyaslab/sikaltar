@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>SIKALTARA — Dashboard LK PDRB Kalimantan Utara</title>
   <meta name="description" content="Sistem Lembar Kerja PDRB Provinsi Kalimantan Utara, BPS Indonesia, SNA 2008, Tahun Dasar 2010">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
   <style>
     .dashboard-grid {
       display: grid;
@@ -265,6 +266,9 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
 <script src="js/api.js"></script>
 <script src="js/sse.js"></script>
 <script>

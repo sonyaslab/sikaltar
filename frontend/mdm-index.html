@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>Master Data Management | SIKALTARA Kaltara</title>
   <meta name="description" content="Admin MDM - kelola komoditas, kategori, kode KBLI, satuan, dan faktor konversi PDRB Kaltara">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/mdm.css">
 </head>
 <body>
@@ -125,6 +126,9 @@
   </div>
 </div>
 
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
 <script src="js/mdm-api.js"></script>
 <script src="js/mdm-utils.js"></script>
 <script>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>S2 — Lembar Kerja PDRB | SIKALTARA Kaltara</title>
   <meta name="description" content="Lembar Kerja S2 — Hasil Perhitungan PDRB ADHB dan ADHK Kalimantan Utara, format identik BPS">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/table.css">
   <link rel="stylesheet" href="css/s2-lk.css">
 </head>
@@ -147,6 +148,9 @@
 <div id="toast-container"></div>
 
 <!-- Scripts — order matters -->
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
 <script src="js/api.js"></script>
 <script src="js/sse.js"></script>
 <script src="js/filters.js"></script>

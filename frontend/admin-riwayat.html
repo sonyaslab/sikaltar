@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Perubahan | Admin SIKALTARA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .audit-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.82rem; }
+    .audit-table thead th {
+      position:sticky; top:0; background:#f8fafc; z-index:5;
+      padding:10px 12px; border-bottom:2px solid #e2e8f0;
+      font-weight:600; color:#475569; white-space:nowrap; text-align:left;
+    }
+    .audit-table tbody td { padding:8px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .audit-table tbody tr:hover td { background:#fafcff; }
+
+    .badge-aksi-INSERT { background:#EAFAF1; color:#145A32; }
+    .badge-aksi-UPDATE { background:#EBF5FB; color:#1A5276; }
+    .badge-aksi-DELETE { background:#FDEDEC; color:#922B21; }
+    .badge-aksi-IMPORT { background:#FEF9E7; color:#7D6608; }
+
+    .diff-cell { font-family:var(--font-mono,monospace); font-size:0.78rem; }
+    .diff-old   { color:#E74C3C; text-decoration:line-through; margin-right:4px; }
+    .diff-new   { color:#1E8449; font-weight:600; }
+
+    .pagination { display:flex; align-items:center; gap:8px; padding:12px 16px; border-top:1px solid #e2e8f0; }
+    .page-btn { padding:5px 10px; border:1px solid #D5DBDB; border-radius:6px; background:#fff; cursor:pointer; font-size:0.8rem; transition:all 140ms; }
+    .page-btn:hover { background:#EBF5FB; border-color:#2E86C1; }
+    .page-btn.active { background:#2E86C1; color:#fff; border-color:#2E86C1; }
+    .page-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .page-info { font-size:0.8rem; color:var(--text-muted); flex:1; text-align:center; }
+
+    .filter-date { padding:7px 10px; border:1px solid #D5DBDB; border-radius:6px; font-size:0.82rem; font-family:var(--font); }
+
+    .empty-msg { text-align:center; padding:60px 20px; color:#94a3b8; }
+    .table-container { overflow:auto; max-height:calc(100vh - 310px); }
+
+    .export-btn { display:flex; align-items:center; gap:6px; }
+  </style>
+</head>
+<body>
+<div class="mdm-shell">
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <div>
+        <h1>📜 Riwayat Perubahan</h1>
+        <span style="font-size:0.8rem;color:var(--text-muted)">Audit log seluruh perubahan data master SIKALTARA</span>
+      </div>
+      <button class="btn btn-ghost export-btn" onclick="exportCSV()" style="margin-left:auto">
+        📥 Export Log CSV
+      </button>
+    </div>
+
+    <div class="mdm-body">
+      <!-- Filter Bar -->
+      <div class="filter-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:14px">
+        <select id="f-tabel" class="mdm-select" onchange="applyFilter()">
+          <option value="">Semua Tabel</option>
+          <option value="komoditas">komoditas</option>
+          <option value="kategori_pdrb">kategori_pdrb</option>
+          <option value="rasio_override">rasio_override</option>
+          <option value="users">users</option>
+          <option value="satuan">satuan</option>
+          <option value="faktor_konversi">faktor_konversi</option>
+        </select>
+        <select id="f-aksi" class="mdm-select" onchange="applyFilter()">
+          <option value="">Semua Aksi</option>
+          <option value="INSERT">INSERT</option>
+          <option value="UPDATE">UPDATE</option>
+          <option value="DELETE">DELETE</option>
+          <option value="IMPORT">IMPORT</option>
+        </select>
+        <select id="f-user" class="mdm-select" onchange="applyFilter()">
+          <option value="">Semua User</option>
+        </select>
+        <input type="date" id="f-dari"   class="filter-date" onchange="applyFilter()" title="Dari tanggal">
+        <input type="date" id="f-sampai" class="filter-date" onchange="applyFilter()" title="Sampai tanggal">
+        <input type="text" id="f-cari"   class="mdm-input"   placeholder="🔍 Cari record / kolom..." oninput="applyFilter()" style="min-width:200px">
+        <button class="btn btn-ghost btn-sm" onclick="resetFilter()">✕ Reset</button>
+        <span id="result-count" style="font-size:0.8rem;color:var(--text-muted);align-self:center;margin-left:auto"></span>
+      </div>
+
+      <!-- Table Card -->
+      <div class="mdm-card" style="padding:0;overflow:hidden">
+        <div class="table-container">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th style="width:150px">Tanggal &amp; Waktu</th>
+                <th style="width:120px">Tabel</th>
+                <th>Record</th>
+                <th style="width:70px">Aksi</th>
+                <th>Kolom → Perubahan</th>
+                <th style="width:110px">User</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody">
+              <tr><td colspan="6" class="empty-msg">
+                <div class="spinner" style="margin:0 auto 10px"></div>Memuat data...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
+<script>
+/* ── Config ──────────────────────────────────────── */
+const PAGE_SIZE = 20;
+let ALL_LOGS = [];
+let FILTERED  = [];
+let CUR_PAGE  = 1;
+
+/* ── Fetch ───────────────────────────────────────── */
+async function loadAudit() {
+  const token = localStorage.getItem('sikaltar_token');
+  try {
+    const res = await fetch('/api/mdm/audit?limit=2000', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    ALL_LOGS = Array.isArray(data) ? data : (data.items || data.logs || []);
+    populateUserFilter();
+    applyFilter();
+  } catch(e) {
+    toast(e.message, 'error');
+    document.getElementById('audit-tbody').innerHTML =
+      `<tr><td colspan="6" class="empty-msg">Gagal memuat data: ${e.message}</td></tr>`;
+  }
+}
+
+/* ── Populate user filter ─────────────────────────── */
+function populateUserFilter() {
+  const users = [...new Set(ALL_LOGS.map(l => l.user || l.changed_by || '—').filter(Boolean))].sort();
+  const sel = document.getElementById('f-user');
+  sel.innerHTML = '<option value="">Semua User</option>';
+  users.forEach(u => sel.innerHTML += `<option value="${u}">${u}</option>`);
+}
+
+/* ── Filter & render ─────────────────────────────── */
+function applyFilter() {
+  const tabel  = document.getElementById('f-tabel').value;
+  const aksi   = document.getElementById('f-aksi').value;
+  const user   = document.getElementById('f-user').value;
+  const dari   = document.getElementById('f-dari').value;
+  const sampai = document.getElementById('f-sampai').value;
+  const cari   = document.getElementById('f-cari').value.toLowerCase();
+
+  FILTERED = ALL_LOGS.filter(l => {
+    const tabelVal = l.tabel || l.table_name || '';
+    const aksiVal  = l.aksi  || l.action     || '';
+    const userVal  = l.user  || l.changed_by || '';
+    const recVal   = String(l.record_id || l.nama || '').toLowerCase();
+    const colVal   = String(l.kolom || l.field || '').toLowerCase();
+    const waktu    = new Date(l.waktu || l.created_at || 0);
+
+    if (tabel  && !tabelVal.includes(tabel)) return false;
+    if (aksi   && aksiVal !== aksi)          return false;
+    if (user   && userVal !== user)          return false;
+    if (dari   && waktu < new Date(dari))    return false;
+    if (sampai && waktu > new Date(sampai + 'T23:59:59')) return false;
+    if (cari   && !recVal.includes(cari) && !colVal.includes(cari) &&
+        !tabelVal.includes(cari) && !userVal.toLowerCase().includes(cari)) return false;
+    return true;
+  });
+
+  CUR_PAGE = 1;
+  document.getElementById('result-count').textContent = `${FILTERED.length} entri`;
+  renderPage();
+}
+
+function resetFilter() {
+  ['f-tabel','f-aksi','f-user'].forEach(id => document.getElementById(id).value = '');
+  ['f-dari','f-sampai','f-cari'].forEach(id => document.getElementById(id).value = '');
+  applyFilter();
+}
+
+/* ── Render ──────────────────────────────────────── */
+function renderPage() {
+  const start  = (CUR_PAGE - 1) * PAGE_SIZE;
+  const page   = FILTERED.slice(start, start + PAGE_SIZE);
+  const tbody  = document.getElementById('audit-tbody');
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-msg">Tidak ada data ditemukan</td></tr>`;
+    renderPagination();
+    return;
+  }
+
+  tbody.innerHTML = page.map(l => {
+    const tabel    = l.tabel       || l.table_name  || '—';
+    const aksi     = l.aksi        || l.action       || '—';
+    const user     = l.user        || l.changed_by   || '—';
+    const record   = l.nama        || `ID: ${l.record_id || '—'}`;
+    const kolom    = l.kolom       || l.field         || '';
+    const valLama  = l.nilai_lama  || l.old_value     || null;
+    const valBaru  = l.nilai_baru  || l.new_value     || null;
+    const waktu    = new Date(l.waktu || l.created_at || 0);
+    const waktuStr = isNaN(waktu) ? '—' : waktu.toLocaleString('id-ID', {
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit'
+    });
+
+    const diffHtml = kolom
+      ? `<strong>${esc(kolom)}</strong>: ${valLama !== null
+          ? `<span class="diff-old">${esc(String(valLama))}</span>` : ''}
+         <span class="diff-new">${valBaru !== null ? esc(String(valBaru)) : ''}</span>`
+      : (valLama || valBaru)
+        ? `<span class="diff-old">${esc(String(valLama||''))}</span>
+           <span class="diff-new">${esc(String(valBaru||''))}</span>`
+        : '<span style="color:#94a3b8">—</span>';
+
+    return `
+      <tr>
+        <td style="white-space:nowrap;font-size:0.78rem;color:#64748b">${waktuStr}</td>
+        <td><code style="font-size:0.78rem;background:#f1f5f9;padding:2px 5px;border-radius:3px">${esc(tabel)}</code></td>
+        <td style="font-size:0.82rem">${esc(record)}</td>
+        <td><span class="badge badge-aksi-${aksi}" style="font-size:0.72rem">${esc(aksi)}</span></td>
+        <td class="diff-cell">${diffHtml}</td>
+        <td style="font-size:0.78rem;color:#374151">${esc(user)}</td>
+      </tr>`;
+  }).join('');
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const total    = FILTERED.length;
+  const pages    = Math.ceil(total / PAGE_SIZE);
+  const pag      = document.getElementById('pagination');
+  if (pages <= 1) { pag.innerHTML = ''; return; }
+
+  const start = Math.max(1, CUR_PAGE - 2);
+  const end   = Math.min(pages, CUR_PAGE + 2);
+  let html = `
+    <button class="page-btn" onclick="goPage(${CUR_PAGE-1})" ${CUR_PAGE===1?'disabled':''}>‹</button>
+  `;
+  if (start > 1) html += `<button class="page-btn" onclick="goPage(1)">1</button><span style="color:#94a3b8">…</span>`;
+  for (let p = start; p <= end; p++) {
+    html += `<button class="page-btn ${p===CUR_PAGE?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  if (end < pages) html += `<span style="color:#94a3b8">…</span><button class="page-btn" onclick="goPage(${pages})">${pages}</button>`;
+  html += `<button class="page-btn" onclick="goPage(${CUR_PAGE+1})" ${CUR_PAGE===pages?'disabled':''}>›</button>`;
+  html += `<span class="page-info">Hal ${CUR_PAGE} dari ${pages} · ${total} total</span>`;
+  pag.innerHTML = html;
+}
+
+function goPage(p) {
+  const pages = Math.ceil(FILTERED.length / PAGE_SIZE);
+  CUR_PAGE = Math.max(1, Math.min(pages, p));
+  renderPage();
+  document.querySelector('.table-container').scrollTop = 0;
+}
+
+/* ── Export CSV ──────────────────────────────────── */
+function exportCSV() {
+  const headers = ['Waktu','Tabel','Record','Aksi','Kolom','Nilai Lama','Nilai Baru','User'];
+  const rows    = FILTERED.map(l => [
+    l.waktu || l.created_at || '',
+    l.tabel || l.table_name || '',
+    l.nama  || l.record_id  || '',
+    l.aksi  || l.action     || '',
+    l.kolom || l.field      || '',
+    l.nilai_lama || l.old_value || '',
+    l.nilai_baru || l.new_value || '',
+    l.user  || l.changed_by  || '',
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`));
+
+  const csv  = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `audit_log_sikaltara_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Export berhasil', 'success');
+}
+
+/* ── Helpers ─────────────────────────────────────── */
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg;
+  c.appendChild(t); setTimeout(()=>t.remove(),4000);
+}
+
+document.addEventListener('DOMContentLoaded', loadAudit);
+</script>
+</body>
+</html>

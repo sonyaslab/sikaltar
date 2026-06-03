@@ -1,0 +1,489 @@
+/* =============================================================
+   SIKALTARA — Layout System (sidebar, collapse, role-menu)
+   Extends main.css — harus di-load setelah main.css
+   ============================================================= */
+
+/* ── CSS Variables Sidebar ───────────────────────────────────── */
+:root {
+  --sb-width:           240px;
+  --sb-collapsed-width: 60px;
+  --sb-bg:              #0D2137;
+  --sb-brand-border:    rgba(255,255,255,0.08);
+  --sb-text:            rgba(255,255,255,0.65);
+  --sb-text-active:     #ffffff;
+  --sb-active-bg:       rgba(255,255,255,0.12);
+  --sb-active-border:   #2E86C1;
+  --sb-hover-bg:        rgba(255,255,255,0.07);
+  --sb-child-bg:        rgba(0,0,0,0.15);
+  --sb-separator:       rgba(255,255,255,0.08);
+  --sb-transition:      250ms cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Sidebar Shell ───────────────────────────────────────────── */
+.sb-sidebar {
+  width: var(--sb-width);
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  overflow: hidden;
+  transition: width var(--sb-transition);
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+.sb-sidebar.sb-collapsed {
+  width: var(--sb-collapsed-width);
+}
+
+/* ── Brand / Logo ────────────────────────────────────────────── */
+.sb-brand {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--sb-brand-border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sb-logo-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+
+.sb-app-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.sb-app-sub {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.sb-wilayah-badge {
+  margin-top: 8px;
+  font-size: 0.68rem;
+  background: rgba(46,134,193,0.25);
+  color: rgba(255,255,255,0.75);
+  border: 1px solid rgba(46,134,193,0.4);
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed: hide text */
+.sb-sidebar.sb-collapsed .sb-app-sub,
+.sb-sidebar.sb-collapsed .sb-app-name,
+.sb-sidebar.sb-collapsed .sb-wilayah-badge { opacity: 0; pointer-events: none; }
+
+/* ── Nav Container ───────────────────────────────────────────── */
+.sb-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.sb-nav::-webkit-scrollbar { width: 4px; }
+.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+/* ── Separator ───────────────────────────────────────────────── */
+.sb-separator {
+  height: 1px;
+  background: var(--sb-separator);
+  margin: 8px 12px;
+}
+
+/* ── Nav Item (link) ─────────────────────────────────────────── */
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  color: var(--sb-text);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 6px;
+  margin: 1px 8px;
+  transition: all 150ms ease;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sb-item:hover {
+  background: var(--sb-hover-bg);
+  color: var(--sb-text-active);
+}
+
+.sb-item.active {
+  background: var(--sb-active-bg);
+  color: var(--sb-text-active);
+  font-weight: 600;
+  border-left: 3px solid var(--sb-active-border);
+  padding-left: 13px; /* kompensasi border 3px */
+}
+
+.sb-item-soon {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Icon & Label ────────────────────────────────────────────── */
+.sb-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.sb-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 200ms ease, width 200ms ease;
+}
+
+.sb-sidebar.sb-collapsed .sb-label { opacity: 0; width: 0; }
+
+/* ── Badge ───────────────────────────────────────────────────── */
+.sb-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.sb-sidebar.sb-collapsed .sb-badge { display: none; }
+
+/* ── Group (collapsible section) ─────────────────────────────── */
+.sb-group { margin: 1px 0; }
+
+.sb-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  width: 100%;
+  color: var(--sb-text);
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font, 'Inter', sans-serif);
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 0 8px;
+  width: calc(100% - 16px);
+  text-align: left;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.4);
+}
+
+.sb-group-toggle:hover {
+  background: var(--sb-hover-bg);
+  color: rgba(255,255,255,0.75);
+}
+
+.sb-group.has-active > .sb-group-toggle {
+  color: rgba(255,255,255,0.85);
+}
+
+.sb-chevron {
+  margin-left: auto;
+  font-size: 0.9rem;
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+.sb-group.open .sb-chevron { transform: rotate(90deg); }
+.sb-sidebar.sb-collapsed .sb-chevron { display: none; }
+
+/* ── Group Children ──────────────────────────────────────────── */
+.sb-group-children {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 250ms ease;
+  background: var(--sb-child-bg);
+}
+
+.sb-group.open .sb-group-children {
+  max-height: 400px;
+}
+
+.sb-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px 7px 28px;
+  color: var(--sb-text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 400;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sb-child:hover {
+  background: var(--sb-hover-bg);
+  color: var(--sb-text-active);
+}
+
+.sb-child.active {
+  color: var(--sb-text-active);
+  font-weight: 600;
+  background: var(--sb-active-bg);
+  border-left: 3px solid var(--sb-active-border);
+  padding-left: 25px;
+}
+
+.sb-child-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.sb-child.active .sb-child-icon { opacity: 1; }
+
+/* Collapsed: group children hidden, show icon only at top level */
+.sb-sidebar.sb-collapsed .sb-group-children { display: none; }
+
+/* ── Collapse Button ─────────────────────────────────────────── */
+.sb-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px;
+  padding: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+.sb-collapse-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8);
+}
+
+/* ── Hamburger (mobile) ──────────────────────────────────────── */
+.sb-hamburger {
+  display: none;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid var(--border, #D5DBDB);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--text, #1A252F);
+  margin-right: 10px;
+  transition: background 150ms;
+}
+.sb-hamburger:hover { background: var(--surface-2, #F8FAFC); }
+
+/* ── Mobile overlay ──────────────────────────────────────────── */
+.sb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 199;
+}
+.sb-overlay.active { display: block; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .sb-sidebar {
+    width: var(--sb-width) !important;
+    transform: translateX(-100%);
+    transition: transform var(--sb-transition);
+  }
+  .sb-sidebar:not(.sb-collapsed) {
+    transform: translateX(0);
+  }
+  .sb-hamburger { display: flex; align-items: center; }
+  .main-content, .mdm-main, .lk-main {
+    margin-left: 0 !important;
+  }
+  .sb-collapse-btn { display: none; }
+}
+
+@media (min-width: 768px) {
+  .sb-overlay { display: none !important; }
+  .sb-hamburger { display: none; }
+}
+
+/* ── Tooltip collapsed ───────────────────────────────────────── */
+.sb-sidebar.sb-collapsed .sb-item,
+.sb-sidebar.sb-collapsed .sb-group-toggle {
+  position: relative;
+}
+.sb-sidebar.sb-collapsed .sb-item::after,
+.sb-sidebar.sb-collapsed .sb-group-toggle::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(var(--sb-collapsed-width) + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a202c;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms;
+  z-index: 300;
+}
+.sb-sidebar.sb-collapsed .sb-item:hover::after,
+.sb-sidebar.sb-collapsed .sb-group-toggle:hover::after {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN SUB-SIDEBAR
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --asn-width: 200px;
+  --asn-bg:    #F8FAFC;
+  --asn-border:#E2E8F0;
+}
+
+.admin-subnav {
+  width: var(--asn-width);
+  min-width: var(--asn-width);
+  background: var(--asn-bg);
+  border-right: 1px solid var(--asn-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 220ms ease, min-width 220ms ease;
+  overflow: hidden;
+}
+
+.admin-subnav.asn-collapsed {
+  width: 42px;
+  min-width: 42px;
+}
+
+.asn-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px 10px;
+  border-bottom: 1px solid var(--asn-border);
+}
+
+.asn-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 180ms;
+}
+.admin-subnav.asn-collapsed .asn-title { opacity: 0; }
+
+.asn-toggle {
+  background: none;
+  border: 1px solid var(--asn-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: #64748b;
+  padding: 2px 5px;
+  flex-shrink: 0;
+  transition: background 150ms;
+}
+.asn-toggle:hover { background: #e2e8f0; }
+
+.asn-nav { display: flex; flex-direction: column; padding: 8px 0; }
+
+.asn-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 0;
+  transition: background 140ms;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+.asn-item:hover { background: #EDF2F7; }
+.asn-item.active {
+  background: #EBF5FB;
+  color: #1A5276;
+  font-weight: 700;
+  border-left: 3px solid #2E86C1;
+  padding-left: 9px;
+}
+
+.asn-icon { font-size: 1rem; flex-shrink: 0; }
+.asn-label { flex: 1; overflow: hidden; text-overflow: ellipsis; transition: opacity 180ms; }
+.admin-subnav.asn-collapsed .asn-label { opacity: 0; }
+
+.asn-count {
+  font-size: 0.68rem;
+  background: #E2E8F0;
+  color: #475569;
+  border-radius: 99px;
+  padding: 1px 6px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: opacity 180ms;
+}
+.asn-count:empty { display: none; }
+.admin-subnav.asn-collapsed .asn-count { opacity: 0; }
+
+/* Konten halaman admin (setelah sub-sidebar) */
+.admin-content-wrap {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .admin-subnav { display: none; }
+  .admin-content-wrap { width: 100%; }
+}
+

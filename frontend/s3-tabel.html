@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>S3 — Tabel Pokok PDRB | SIKALTARA Kaltara</title>
   <meta name="description" content="S3 Tabel Pokok PDRB Kalimantan Utara — 6 tabel standar BPS: ADHB, ADHK, Distribusi, Laju Pertumbuhan, Indeks Implisit, Laju Implisit">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/s3-tabel.css">
 </head>
 <body>
@@ -119,6 +120,9 @@
 
 <!-- SheetJS CDN -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
 <script src="js/api.js"></script>
 <script src="js/s3-tabel.js"></script>
 </body>

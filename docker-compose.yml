@@ -1,16 +1,25 @@
-﻿version: "3.9"
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────
+# SIKALTARA — Docker Compose (Development + Production)
+#
+# Development:  APP_ENV=development docker-compose up
+# Production:   APP_ENV=production  docker-compose -f docker-compose.yml up -d
+# ─────────────────────────────────────────────────────────────────
 
 services:
+
+  # ── PostgreSQL Database ──────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: sikaltara_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: sikaltara_db
-      POSTGRES_USER: sikaltara
-      POSTGRES_PASSWORD: sikaltara2024
+      POSTGRES_DB:       sikaltara_db
+      POSTGRES_USER:     sikaltara
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sikaltara2024}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - sikaltara_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,13 +27,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - sikaltara_net
 
+  # ── Redis (Celery broker + cache) ────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: sikaltara_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - sikaltara_redisdata:/data
     healthcheck:
@@ -32,7 +44,84 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - sikaltara_net
+
+  # ── FastAPI App ──────────────────────────────────────────────────
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sikaltara_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: ./backend/.env
+    environment:
+      APP_ENV:      ${APP_ENV:-production}
+      DATABASE_URL: postgresql://sikaltara:${DB_PASSWORD:-sikaltara2024}@db:5432/sikaltara_db
+      REDIS_URL:    redis://redis:6379/0
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    networks:
+      - sikaltara_net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Nginx Reverse Proxy (opsional, untuk production) ─────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: sikaltara_nginx
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"    # siapkan untuk SSL
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./ssl:/etc/nginx/ssl:ro     # mount SSL certs jika ada
+    networks:
+      - sikaltara_net
+    profiles:
+      - production   # hanya jalan saat: docker-compose --profile production up
+
+  # ── Celery Worker (background tasks cascade) ─────────────────────
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sikaltara_celery
+    restart: unless-stopped
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://sikaltara:${DB_PASSWORD:-sikaltara2024}@db:5432/sikaltara_db
+      REDIS_URL:    redis://redis:6379/0
+    networks:
+      - sikaltara_net
+    profiles:
+      - celery     # opsional: docker-compose --profile celery up
+
+networks:
+  sikaltara_net:
+    driver: bridge
 
 volumes:
   sikaltara_pgdata:
+    name: sikaltara_pgdata
   sikaltara_redisdata:
+    name: sikaltara_redisdata

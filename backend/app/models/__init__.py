@@ -6,6 +6,7 @@ from app.models.rasio import RasioReferensi, RasioOverride
 from app.models.input_data import InputHarga, InputProduksi, InputIndeksDeflator
 from app.models.hasil import LkHasil, PdrbRekap
 from app.models.master import MasterVersi, AuditMaster, MasterSatuan
+from app.models.user import User
 
 __all__ = [
     'Wilayah', 'KategoriPdrb', 'Komoditas',
@@ -13,4 +14,5 @@ __all__ = [
     'InputHarga', 'InputProduksi', 'InputIndeksDeflator',
     'LkHasil', 'PdrbRekap',
     'MasterVersi', 'AuditMaster', 'MasterSatuan',
+    'User',
 ]

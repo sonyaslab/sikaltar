@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rasio Referensi | Admin SIKALTARA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .rasio-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.83rem; }
+    .rasio-table thead th {
+      position:sticky; top:0; background:#f8fafc; z-index:5;
+      padding:10px 12px; border-bottom:2px solid #e2e8f0;
+      font-weight:600; color:#475569; white-space:nowrap; text-align:left;
+    }
+    .rasio-table tbody td { padding:8px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .rasio-table tbody tr:hover td { background:#fafcff; }
+    .rasio-table tbody tr.overridden td { background:#FEFCE8; }
+
+    .badge-jenis { font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:99px; }
+    .badge-OS    { background:#EBF5FB; color:#1A5276; }
+    .badge-WIP   { background:#EAF7FB; color:#117A8B; }
+    .badge-KA    { background:#EAFAF1; color:#145A32; }
+    .badge-ADJ   { background:#FEF9E7; color:#7D6608; }
+    .badge-CBR   { background:#FDEDEC; color:#922B21; }
+
+    .nilai-cell { display:flex; align-items:center; gap:6px; }
+    .nilai-display { cursor:pointer; padding:4px 8px; border-radius:4px; transition:background 140ms; min-width:70px; }
+    .nilai-display:hover { background:#EBF5FB; }
+    .nilai-input {
+      width:90px; padding:4px 8px; border:2px solid #2E86C1; border-radius:4px;
+      font-size:0.83rem; font-family:var(--font); outline:none;
+    }
+    .override-dot { color:#F39C12; font-size:0.7rem; }
+    .btn-reset-override { font-size:0.72rem; color:#E74C3C; background:none; border:none; cursor:pointer; padding:2px 6px; }
+    .btn-reset-override:hover { text-decoration:underline; }
+    .cascade-tag { font-size:0.7rem; background:#D5F5E3; color:#1E8449; padding:2px 7px; border-radius:99px; }
+    .table-wrap { overflow:auto; max-height:calc(100vh - 220px); }
+
+    .wilayah-select { font-size:0.8rem; }
+  </style>
+</head>
+<body>
+<div class="mdm-shell">
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <div>
+        <h1>📊 Rasio Referensi</h1>
+        <span style="font-size:0.8rem;color:var(--text-muted)">Edit nilai rasio OS/WIP/KA/ADJ — perubahan trigger cascade otomatis</span>
+      </div>
+      <div id="cascade-tag-wrap" style="margin-left:auto"></div>
+    </div>
+
+    <div class="mdm-body">
+      <!-- Filter Bar -->
+      <div class="filter-bar" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <select id="f-jenis" class="mdm-select" onchange="loadRasio()">
+          <option value="OS">OS (Overhead Surplus)</option>
+          <option value="WIP">WIP (Work in Progress)</option>
+          <option value="KA">KA (Kebutuhan Antara)</option>
+          <option value="ADJ">ADJ (Penyesuaian)</option>
+          <option value="CBR">CBR</option>
+        </select>
+        <select id="f-berlaku" class="mdm-select" onchange="loadRasio()">
+          <option value="ADHB">ADHB</option>
+          <option value="ADHK">ADHK</option>
+          <option value="KEDUANYA">KEDUANYA</option>
+        </select>
+        <select id="f-tahun" class="mdm-select" onchange="loadRasio()"></select>
+        <select id="f-wilayah" class="mdm-select wilayah-select" onchange="loadRasio()">
+          <option value="65">Provinsi Kaltara (65)</option>
+          <option value="6501">Kab. Malinau (6501)</option>
+          <option value="6502">Kab. Bulungan (6502)</option>
+          <option value="6503">Kab. Tana Tidung (6503)</option>
+          <option value="6504">Kab. Nunukan (6504)</option>
+          <option value="6571">Kota Tarakan (6571)</option>
+        </select>
+        <span id="row-count" style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;align-self:center"></span>
+      </div>
+
+      <!-- Table -->
+      <div class="mdm-card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table class="rasio-table" id="rasio-table">
+            <thead>
+              <tr>
+                <th style="width:40px">No</th>
+                <th>Kategori</th>
+                <th style="width:60px">Level</th>
+                <th style="width:80px">Jenis</th>
+                <th style="width:80px">Berlaku</th>
+                <th style="width:140px">Nilai Default (%)</th>
+                <th style="width:160px">Override (%)</th>
+                <th style="width:90px">Status</th>
+              </tr>
+            </thead>
+            <tbody id="rasio-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8">
+                <div class="spinner" style="margin:0 auto 10px"></div>Memuat data...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
+<script>
+const API = (path, opts={}) => {
+  const token = localStorage.getItem('sikaltar_token');
+  return fetch('/api' + path, {
+    ...opts,
+    headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers||{}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  }).then(async r => { if(!r.ok) throw new Error((await r.json().catch(()=>({}))).detail||`HTTP ${r.status}`); return r.json(); });
+};
+
+// Init tahun select
+(function initTahun() {
+  const sel = document.getElementById('f-tahun');
+  const cur = new Date().getFullYear();
+  for (let y = cur; y >= 2011; y--) sel.innerHTML += `<option value="${y}">${y}</option>`;
+})();
+
+async function loadRasio() {
+  const jenis    = document.getElementById('f-jenis').value;
+  const berlaku  = document.getElementById('f-berlaku').value;
+  const tahun    = document.getElementById('f-tahun').value;
+  const wilayah  = document.getElementById('f-wilayah').value;
+  const tbody    = document.getElementById('rasio-tbody');
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8"><div class="spinner" style="margin:0 auto 8px"></div>Memuat...</td></tr>`;
+  try {
+    const rows = await API(`/rasio?jenis_rasio=${jenis}&berlaku_untuk=${berlaku}&tahun=${tahun}&wilayah_kode=${wilayah}`);
+    document.getElementById('row-count').textContent = `${rows.length} kategori`;
+    renderRows(rows, jenis, berlaku, tahun, wilayah);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderRows(rows, jenis, berlaku, tahun, wilayah) {
+  const tbody = document.getElementById('rasio-tbody');
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8">Tidak ada data</td></tr>`; return; }
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr class="${r.is_overridden ? 'overridden' : ''}" id="row-${i}">
+      <td style="color:#94a3b8;font-size:0.78rem">${i+1}</td>
+      <td>
+        <span style="margin-left:${(r.level-1)*14}px;display:inline-block">
+          ${r.level === 2 ? '▸' : r.level === 3 ? '└' : ''} ${r.kategori_nama}
+        </span>
+        <code style="font-size:0.7rem;color:#94a3b8;margin-left:4px">${r.kategori_kode}</code>
+      </td>
+      <td style="text-align:center"><span class="badge-level">L${r.level}</span></td>
+      <td><span class="badge badge-jenis badge-${jenis}">${jenis}</span></td>
+      <td style="font-size:0.78rem">${berlaku}</td>
+      <td style="font-family:var(--font-mono,monospace)">
+        ${r.nilai_default !== null ? parseFloat(r.nilai_default).toFixed(4) : '<span style="color:#94a3b8">—</span>'}
+      </td>
+      <td>
+        <div class="nilai-cell">
+          <span class="nilai-display" id="disp-${i}" onclick="startEdit(${i},'${r.kategori_kode}','${jenis}','${berlaku}',${tahun},'${wilayah}',${r.override_id||'null'})">
+            ${r.nilai_override !== null
+              ? `<span class="override-dot">●</span> ${parseFloat(r.nilai_override).toFixed(4)}`
+              : '<span style="color:#94a3b8;font-style:italic">default</span>'}
+          </span>
+        </div>
+      </td>
+      <td>
+        ${r.is_overridden
+          ? `<button class="btn-reset-override" onclick="resetOverride(${r.override_id},${i})">↩ Reset</button>`
+          : `<span style="font-size:0.72rem;color:#94a3b8">BPS default</span>`}
+      </td>
+    </tr>
+  `).join('');
+}
+
+let _editing = null;
+function startEdit(idx, katKode, jenis, berlaku, tahun, wilayah, overrideId) {
+  if (_editing !== null) cancelEdit();
+  _editing = idx;
+  const disp = document.getElementById(`disp-${idx}`);
+  const curVal = disp.querySelector('.override-dot')
+    ? disp.textContent.trim().replace('●','').trim()
+    : '';
+  disp.parentElement.innerHTML = `
+    <input type="number" class="nilai-input" id="inp-${idx}" value="${curVal}"
+           step="0.0001" min="0" max="100" autofocus
+           onkeydown="if(event.key==='Enter')saveEdit(${idx},'${katKode}','${jenis}','${berlaku}',${tahun},'${wilayah}',${overrideId})
+                      ;else if(event.key==='Escape')cancelEdit()">
+    <button class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:0.78rem"
+            onclick="saveEdit(${idx},'${katKode}','${jenis}','${berlaku}',${tahun},'${wilayah}',${overrideId})">✓</button>
+    <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:0.78rem"
+            onclick="cancelEdit()">✕</button>
+  `;
+  document.getElementById(`inp-${idx}`).focus();
+}
+
+function cancelEdit() { _editing = null; loadRasio(); }
+
+async function saveEdit(idx, katKode, jenis, berlaku, tahun, wilayah, overrideId) {
+  const val = parseFloat(document.getElementById(`inp-${idx}`).value);
+  if (isNaN(val) || val < 0 || val > 100) { toast('Nilai harus antara 0–100','error'); return; }
+  try {
+    const res = await API('/rasio/override', { method:'POST', body:{
+      kategori_kode: katKode, jenis_rasio: jenis, berlaku_untuk: berlaku,
+      tahun, wilayah_kode: wilayah, nilai: val, keterangan: 'Update via admin panel'
+    }});
+    _editing = null;
+    // Tampilkan cascade tag
+    const tag = document.getElementById('cascade-tag-wrap');
+    tag.innerHTML = `<span class="cascade-tag">⚙️ Cascade berjalan... task: ${res.task_id?.slice(0,8)}</span>`;
+    setTimeout(() => tag.innerHTML = '', 5000);
+    toast('Override disimpan. Cascade otomatis berjalan.','success');
+    loadRasio();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function resetOverride(overrideId, idx) {
+  if (!confirm('Reset ke nilai default BPS?')) return;
+  try {
+    const res = await API(`/rasio/override/${overrideId}`, { method:'DELETE' });
+    toast('Override dihapus. Menggunakan default BPS.','success');
+    loadRasio();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 4000);
+}
+
+document.addEventListener('DOMContentLoaded', loadRasio);
+</script>
+</body>
+</html>

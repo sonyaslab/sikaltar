@@ -1,4 +1,4 @@
-﻿"""
+"""
 SIKALTARA — FastAPI Application Entry Point
 Sistem LK PDRB Provinsi Kalimantan Utara
 """
@@ -8,12 +8,13 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.database import check_connection
+from app.dependencies.auth import require_operator_or_admin, require_admin
 
 
 @asynccontextmanager
@@ -38,11 +39,18 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+_IS_DEV = os.getenv("APP_ENV", "production") == "development"
+_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+] if _IS_DEV else [
+    os.getenv("APP_ORIGIN", "http://localhost:8000"),
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if os.getenv("APP_ENV") == "development" else [
-        "http://localhost:8000",
-    ],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,28 +85,59 @@ from app.api.mdm_metode import router as mdm_metode_router         # noqa: E402
 from app.api.s3 import router as s3_router                         # noqa: E402
 from app.api.master_komoditas import router as master_komoditas_router # noqa: E402
 from app.api.master_summary import router as master_summary_router # noqa: E402
+from app.routers.auth import router as auth_router                 # noqa: E402
+from app.routers.admin_users import router as admin_users_router   # noqa: E402
 
-app.include_router(referensi_router, prefix="/api", tags=["Referensi"])
-app.include_router(harga_router, prefix="/api/input/harga", tags=["S1.H — Harga"])
-app.include_router(produksi_router, prefix="/api/input/produksi", tags=["S1.P — Produksi"])
-app.include_router(rasio_router, prefix="/api/rasio", tags=["S1.R — Rasio"])
-app.include_router(deflator_router, prefix="/api/input/deflator", tags=["S1.I — Deflator"])
-app.include_router(sse_router, prefix="/api", tags=["SSE Events"])
-app.include_router(s2_router, prefix="/api/s2", tags=["S2 — Lembar Kerja Hasil"])
-app.include_router(s3_router, prefix="/api/s3", tags=["S3 — Tabel Pokok & Dashboard"])
+# ─── Auth Router (TIDAK dilindungi — public endpoint) ────────────────────────
+app.include_router(auth_router, prefix="/auth", tags=["Autentikasi"])
 
-# ─── MDM Routers ────────────────────────────────────────────────────────────────
-app.include_router(mdm_kategori_router,    prefix="/api/mdm/kategori",        tags=["MDM — Kategori"])
-app.include_router(mdm_komoditas_router,   prefix="/api/mdm/komoditas",       tags=["MDM — Komoditas"])
-app.include_router(mdm_klasifikasi_router, prefix="/api/mdm/klasifikasi",     tags=["MDM — Klasifikasi"])
-app.include_router(mdm_satuan_router,      prefix="/api/mdm/satuan",          tags=["MDM — Satuan"])
-app.include_router(mdm_faktor_router,      prefix="/api/mdm/faktor-konversi", tags=["MDM — Faktor Konversi"])
-app.include_router(mdm_audit_router,       prefix="/api/mdm/audit",           tags=["MDM — Audit Log"])
-app.include_router(mdm_metode_router,      prefix="/api/mdm/metode",          tags=["MDM — Metode Estimasi"])
-app.include_router(master_komoditas_router, prefix="/api/master/komoditas",    tags=["Master — Komoditas"])
-app.include_router(master_summary_router,   prefix="/api/master/summary",      tags=["Master — Summary"])
+# ─── Protected API Routers ────────────────────────────────────────────────────
+_auth_dep = [Depends(require_operator_or_admin)]
 
+app.include_router(referensi_router, prefix="/api", tags=["Referensi"],
+                   dependencies=_auth_dep)
+app.include_router(harga_router, prefix="/api/input/harga", tags=["S1.H — Harga"],
+                   dependencies=_auth_dep)
+app.include_router(produksi_router, prefix="/api/input/produksi", tags=["S1.P — Produksi"],
+                   dependencies=_auth_dep)
+app.include_router(rasio_router, prefix="/api/rasio", tags=["S1.R — Rasio"],
+                   dependencies=_auth_dep)
+app.include_router(deflator_router, prefix="/api/input/deflator", tags=["S1.I — Deflator"],
+                   dependencies=_auth_dep)
+app.include_router(sse_router, prefix="/api", tags=["SSE Events"],
+                   dependencies=_auth_dep)
+app.include_router(s2_router, prefix="/api/s2", tags=["S2 — Lembar Kerja Hasil"],
+                   dependencies=_auth_dep)
+app.include_router(s3_router, prefix="/api/s3", tags=["S3 — Tabel Pokok & Dashboard"],
+                   dependencies=_auth_dep)
 
+# ─── MDM Routers (operator_or_admin) ─────────────────────────────────────────
+app.include_router(mdm_kategori_router,    prefix="/api/mdm/kategori",        tags=["MDM — Kategori"],
+                   dependencies=_auth_dep)
+app.include_router(mdm_komoditas_router,   prefix="/api/mdm/komoditas",       tags=["MDM — Komoditas"],
+                   dependencies=_auth_dep)
+app.include_router(mdm_klasifikasi_router, prefix="/api/mdm/klasifikasi",     tags=["MDM — Klasifikasi"],
+                   dependencies=_auth_dep)
+app.include_router(mdm_satuan_router,      prefix="/api/mdm/satuan",          tags=["MDM — Satuan"],
+                   dependencies=_auth_dep)
+app.include_router(mdm_faktor_router,      prefix="/api/mdm/faktor-konversi", tags=["MDM — Faktor Konversi"],
+                   dependencies=_auth_dep)
+app.include_router(mdm_audit_router,       prefix="/api/mdm/audit",           tags=["MDM — Audit Log"],
+                   dependencies=_auth_dep)
+app.include_router(mdm_metode_router,      prefix="/api/mdm/metode",          tags=["MDM — Metode Estimasi"],
+                   dependencies=_auth_dep)
+app.include_router(master_komoditas_router, prefix="/api/master/komoditas",   tags=["Master — Komoditas"],
+                   dependencies=_auth_dep)
+app.include_router(master_summary_router,   prefix="/api/master/summary",     tags=["Master — Summary"],
+                   dependencies=_auth_dep)
+
+# ─── Admin Users Router ───────────────────────────────────────────────────────
+app.include_router(
+    admin_users_router,
+    prefix="/admin/users",
+    tags=["Admin — Manajemen User"],
+    dependencies=[Depends(require_admin)],
+)
 
 # ─── Frontend Static Files ────────────────────────────────────────────────────
 frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"

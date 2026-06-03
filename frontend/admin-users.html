@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Pengguna | SIKALTARA</title>
+  <meta name="description" content="Kelola akun operator dan admin SIKALTARA">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mdm.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    /* ── User Table ── */
+    .user-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.84rem; }
+    .user-table thead th {
+      position:sticky; top:0; background:#f8fafc; z-index:5;
+      padding:10px 14px; border-bottom:2px solid #e2e8f0;
+      font-weight:600; color:#475569; text-align:left; white-space:nowrap;
+    }
+    .user-table tbody td { padding:10px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .user-table tbody tr:hover td { background:#fafcff; }
+    .user-table tbody tr.inactive td { opacity:.55; }
+
+    /* ── Badges ── */
+    .badge-role-admin    { background:#EBF5FB; color:#1A5276; border:1px solid #AED6F1; }
+    .badge-role-operator { background:#EAFAF1; color:#145A32; border:1px solid #A9DFBF; }
+    .badge-status-aktif  { background:#EAFAF1; color:#145A32; }
+    .badge-status-nonaktif { background:#FDEDEC; color:#922B21; }
+
+    /* ── Stats strip ── */
+    .stats-strip { display:flex; gap:20px; font-size:0.82rem; color:var(--text-muted); align-items:center; }
+    .stats-strip .s-num { font-weight:700; color:var(--text); font-size:1rem; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
+      z-index:500; align-items:center; justify-content:center;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:#fff; border-radius:12px; width:480px; max-width:95vw;
+      box-shadow:0 20px 60px rgba(0,0,0,.2); overflow:hidden;
+    }
+    .modal-head {
+      padding:18px 22px; border-bottom:1px solid #e2e8f0;
+      display:flex; align-items:center; gap:10px;
+    }
+    .modal-head h2 { font-size:1rem; font-weight:700; flex:1; margin:0; }
+    .modal-body   { padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
+    .modal-foot   { padding:14px 22px; border-top:1px solid #e2e8f0; display:flex; gap:10px; justify-content:flex-end; }
+    .form-group   { display:flex; flex-direction:column; gap:5px; }
+    .form-group label { font-size:0.8rem; font-weight:600; color:#374151; }
+    .form-input, .form-select {
+      padding:8px 12px; border:1px solid #D5DBDB; border-radius:6px;
+      font-size:0.85rem; font-family:var(--font); outline:none; width:100%;
+      transition:border-color 150ms;
+    }
+    .form-input:focus, .form-select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(43,117,178,.1); }
+    .form-input:disabled, .form-select:disabled { background:#f1f5f9; color:#94a3b8; cursor:not-allowed; }
+    .form-hint { font-size:0.72rem; color:var(--text-muted); margin-top:2px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    /* ── Reset modal ── */
+    .reset-preview {
+      background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;
+      padding:14px 16px; font-family:var(--font-mono,monospace); font-size:0.9rem;
+      text-align:center; letter-spacing:0.12em; font-weight:700; color:var(--primary);
+    }
+    .reset-warning { background:#FEF9E7; border:1px solid #F9E79F; border-radius:6px; padding:10px 14px; font-size:0.8rem; color:#7D6608; }
+
+    /* ── Action buttons ── */
+    .btn-icon { padding:5px 10px; font-size:0.78rem; }
+    .btn-deactivate { color:#E74C3C; border-color:#E74C3C; }
+    .btn-deactivate:hover { background:#FDEDEC; }
+
+    .table-scroll { overflow:auto; max-height:calc(100vh - 260px); }
+    .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+<div class="mdm-shell">
+  <!-- Sidebar: injected by layout.js -->
+
+  <div class="mdm-main">
+    <div class="mdm-topbar">
+      <div>
+        <h1>👥 Manajemen Pengguna</h1>
+        <div class="stats-strip" id="stats-strip">
+          <span>Memuat...</span>
+        </div>
+      </div>
+      <div style="margin-left:auto">
+        <button class="btn btn-primary" onclick="openAddModal()">+ Tambah User</button>
+      </div>
+    </div>
+
+    <div class="mdm-body">
+      <!-- Filter Bar -->
+      <div class="filter-bar" style="margin-bottom:14px">
+        <input type="text" id="search-input" class="mdm-input" placeholder="🔍 Cari nama / username..."
+               oninput="filterTable()" style="min-width:260px">
+        <select id="filter-role" class="mdm-select" onchange="filterTable()">
+          <option value="">Semua Role</option>
+          <option value="admin">Admin</option>
+          <option value="operator">Operator</option>
+        </select>
+        <select id="filter-status" class="mdm-select" onchange="filterTable()">
+          <option value="aktif">Aktif</option>
+          <option value="nonaktif">Nonaktif</option>
+          <option value="">Semua</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="mdm-card" style="padding:0; overflow:hidden">
+        <div class="table-scroll">
+          <table class="user-table" id="user-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Wilayah</th>
+                <th>Status</th>
+                <th>Login Terakhir</th>
+                <th style="width:160px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="user-tbody">
+              <tr><td colspan="7" class="empty-state">
+                <div class="spinner" style="margin:0 auto 10px"></div>Memuat data...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Tambah / Edit ───────────────────────────────────── -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span id="modal-icon">➕</span>
+      <h2 id="modal-title">Tambah User Baru</h2>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="f-nama" class="form-input" placeholder="Budi Santoso">
+        </div>
+        <div class="form-group">
+          <label>Username <span style="color:#E74C3C">*</span></label>
+          <input type="text" id="f-username" class="form-input" placeholder="budi_admin">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="f-email" class="form-input" placeholder="budi@bps.go.id">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role <span style="color:#E74C3C">*</span></label>
+          <select id="f-role" class="form-select" onchange="onRoleChange()">
+            <option value="operator">Operator</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Wilayah</label>
+          <select id="f-wilayah" class="form-select">
+            <option value="">Semua (Admin)</option>
+          </select>
+          <span class="form-hint" id="wilayah-hint">Admin memiliki akses semua wilayah</span>
+        </div>
+      </div>
+      <div class="form-group" id="pw-group">
+        <label>Password <span style="color:#E74C3C">*</span></label>
+        <input type="password" id="f-password" class="form-input" placeholder="Minimal 6 karakter">
+        <span class="form-hint">User wajib ganti password saat login pertama</span>
+      </div>
+      <div class="form-group" id="status-group" style="display:none">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="f-aktif" style="width:16px;height:16px">
+          Akun Aktif
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Batal</button>
+      <button class="btn btn-primary" id="btn-save-user" onclick="saveUser()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Reset Password ──────────────────────────────────── -->
+<div class="modal-overlay" id="modal-reset">
+  <div class="modal-box" style="width:420px">
+    <div class="modal-head">
+      <span>🔑</span>
+      <h2>Reset Password</h2>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; margin:0">
+        Reset password untuk <strong id="reset-username-label"></strong>?
+      </p>
+      <div class="reset-warning">
+        ⚠️ User wajib mengganti password saat login berikutnya.
+      </div>
+      <div>
+        <div style="font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:6px">Password Sementara (otomatis):</div>
+        <div class="reset-preview" id="reset-pw-preview">—</div>
+      </div>
+      <input type="hidden" id="reset-user-id">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reset')">Batal</button>
+      <button class="btn btn-primary" onclick="doReset()">Ya, Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init({ pageId: 'mdm-users', adminOnly: true });</script>
+<script>
+/* ── State ─────────────────────────────────────────────── */
+let ALL_USERS   = [];
+let WILAYAH_MAP = {}; // kode → nama
+
+/* ── Init ──────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([loadWilayah(), loadUsers()]);
+});
+
+async function apiFetch(path, opts = {}) {
+  const token = localStorage.getItem('sikaltar_token');
+  const res = await fetch(`/admin${path}`, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept':       'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(opts.headers || {}),
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 401) { AUTH.logout(); return; }
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/* ── Load Wilayah ──────────────────────────────────────── */
+async function loadWilayah() {
+  try {
+    const token = localStorage.getItem('sikaltar_token');
+    const res = await fetch('/api/referensi/wilayah', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    (data.wilayah || data || []).forEach(w => {
+      WILAYAH_MAP[w.kode] = w.nama;
+    });
+    // Populate wilayah select
+    const sel = document.getElementById('f-wilayah');
+    sel.innerHTML = '<option value="">Semua (Admin)</option>';
+    Object.entries(WILAYAH_MAP).forEach(([kode, nama]) => {
+      sel.innerHTML += `<option value="${kode}">${nama}</option>`;
+    });
+  } catch (e) {
+    console.warn('Wilayah load failed:', e);
+  }
+}
+
+/* ── Load Users ────────────────────────────────────────── */
+async function loadUsers() {
+  try {
+    const data = await apiFetch('/users');
+    ALL_USERS = data.users || [];
+    renderStats(data);
+    renderTable(ALL_USERS);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+/* ── Stats ─────────────────────────────────────────────── */
+function renderStats(data) {
+  document.getElementById('stats-strip').innerHTML = `
+    <span><span class="s-num">${data.aktif}</span> pengguna aktif</span>
+    <span>·</span>
+    <span><span class="s-num">${data.admin_count}</span> admin</span>
+    <span>·</span>
+    <span><span class="s-num">${data.operator_count}</span> operator</span>
+  `;
+}
+
+/* ── Render Table ──────────────────────────────────────── */
+function renderTable(users) {
+  const tbody = document.getElementById('user-tbody');
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Tidak ada pengguna ditemukan</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => {
+    const roleBadge = u.role === 'admin'
+      ? `<span class="badge badge-role-admin">Admin</span>`
+      : `<span class="badge badge-role-operator">Operator</span>`;
+    const wilayahLabel = u.wilayah_kode
+      ? (WILAYAH_MAP[u.wilayah_kode] || u.wilayah_kode)
+      : '<span style="color:#94a3b8;font-style:italic">Semua wilayah</span>';
+    const statusBadge = u.is_active
+      ? `<span class="badge badge-status-aktif">● Aktif</span>`
+      : `<span class="badge badge-status-nonaktif">○ Nonaktif</span>`;
+    const loginText = u.last_login ? timeAgo(u.last_login) : '—';
+    const inactiveClass = u.is_active ? '' : ' inactive';
+    return `
+      <tr class="${inactiveClass}" data-id="${u.id}">
+        <td><strong>${esc(u.nama || u.username)}</strong></td>
+        <td style="font-family:var(--font-mono,monospace);font-size:0.8rem;color:#374151">${esc(u.username)}</td>
+        <td>${roleBadge}</td>
+        <td>${wilayahLabel}</td>
+        <td>${statusBadge}</td>
+        <td style="color:var(--text-muted);font-size:0.8rem">${loginText}</td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-icon" onclick="openEditModal(${u.id})">✏️ Edit</button>
+            <button class="btn btn-ghost btn-icon" onclick="openResetModal(${u.id}, '${esc(u.username)}')">🔑 Reset PW</button>
+            ${u.is_active
+              ? `<button class="btn btn-ghost btn-icon btn-deactivate" onclick="deactivate(${u.id}, '${esc(u.username)}')">🚫</button>`
+              : `<button class="btn btn-ghost btn-icon" onclick="reactivate(${u.id})" style="color:#22c55e;border-color:#22c55e">✅</button>`
+            }
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ── Filter ────────────────────────────────────────────── */
+function filterTable() {
+  const q      = document.getElementById('search-input').value.toLowerCase();
+  const role   = document.getElementById('filter-role').value;
+  const status = document.getElementById('filter-status').value;
+  const filtered = ALL_USERS.filter(u => {
+    const matchQ = !q || (u.nama||'').toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
+    const matchR = !role   || u.role === role;
+    const matchS = !status
+      ? true
+      : status === 'aktif' ? u.is_active : !u.is_active;
+    return matchQ && matchR && matchS;
+  });
+  renderTable(filtered);
+}
+
+/* ── Modal Add ─────────────────────────────────────────── */
+function openAddModal() {
+  resetForm();
+  document.getElementById('modal-title').textContent = 'Tambah User Baru';
+  document.getElementById('modal-icon').textContent  = '➕';
+  document.getElementById('edit-id').value = '';
+  document.getElementById('pw-group').style.display     = '';
+  document.getElementById('status-group').style.display = 'none';
+  document.getElementById('f-username').disabled = false;
+  openModal('modal-user');
+}
+
+/* ── Modal Edit ────────────────────────────────────────── */
+function openEditModal(id) {
+  const u = ALL_USERS.find(x => x.id === id);
+  if (!u) return;
+  resetForm();
+  document.getElementById('modal-title').textContent    = 'Edit Pengguna';
+  document.getElementById('modal-icon').textContent     = '✏️';
+  document.getElementById('edit-id').value              = id;
+  document.getElementById('f-nama').value               = u.nama || '';
+  document.getElementById('f-username').value           = u.username;
+  document.getElementById('f-username').disabled        = true;
+  document.getElementById('f-email').value              = u.email || '';
+  document.getElementById('f-role').value               = u.role;
+  document.getElementById('f-wilayah').value            = u.wilayah_kode || '';
+  document.getElementById('f-aktif').checked            = u.is_active;
+  document.getElementById('pw-group').style.display     = 'none';
+  document.getElementById('status-group').style.display = '';
+  onRoleChange();
+  openModal('modal-user');
+}
+
+function onRoleChange() {
+  const isAdmin = document.getElementById('f-role').value === 'admin';
+  const selWil  = document.getElementById('f-wilayah');
+  const hint    = document.getElementById('wilayah-hint');
+  if (isAdmin) {
+    selWil.value    = '';
+    selWil.disabled = true;
+    hint.textContent = 'Admin memiliki akses semua wilayah';
+  } else {
+    selWil.disabled = false;
+    hint.textContent = 'Pilih wilayah operasional';
+  }
+}
+
+/* ── Save User ─────────────────────────────────────────── */
+async function saveUser() {
+  const id       = document.getElementById('edit-id').value;
+  const isEdit   = !!id;
+  const nama     = document.getElementById('f-nama').value.trim();
+  const username = document.getElementById('f-username').value.trim();
+  const email    = document.getElementById('f-email').value.trim();
+  const role     = document.getElementById('f-role').value;
+  const wilayah  = document.getElementById('f-wilayah').value;
+  const pw       = document.getElementById('f-password').value;
+  const aktif    = document.getElementById('f-aktif').checked;
+
+  if (!username) { toast('Username wajib diisi', 'error'); return; }
+
+  const btn = document.getElementById('btn-save-user');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  try {
+    if (isEdit) {
+      const body = { nama, email: email||null, role, wilayah_kode: wilayah||null, is_active: aktif };
+      const updated = await apiFetch(`/users/${id}`, { method: 'PATCH', body });
+      ALL_USERS = ALL_USERS.map(u => u.id === parseInt(id) ? updated : u);
+      toast(`User '${updated.username}' berhasil diperbarui`, 'success');
+    } else {
+      if (!pw) { toast('Password wajib diisi', 'error'); return; }
+      const body = { nama, username, email: email||null, role, wilayah_kode: wilayah||null, password: pw };
+      const created = await apiFetch('/users', { method: 'POST', body });
+      ALL_USERS.unshift(created);
+      toast(`User '${created.username}' berhasil dibuat`, 'success');
+    }
+    closeModal('modal-user');
+    await loadUsers();
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan';
+  }
+}
+
+/* ── Deactivate / Reactivate ───────────────────────────── */
+async function deactivate(id, username) {
+  if (!confirm(`Nonaktifkan akun '${username}'?`)) return;
+  try {
+    await apiFetch(`/users/${id}`, { method: 'DELETE' });
+    toast(`Akun '${username}' dinonaktifkan`, 'success');
+    await loadUsers();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function reactivate(id) {
+  try {
+    await apiFetch(`/users/${id}`, { method: 'PATCH', body: { is_active: true } });
+    toast('Akun diaktifkan kembali', 'success');
+    await loadUsers();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Reset Password ────────────────────────────────────── */
+function openResetModal(id, username) {
+  document.getElementById('reset-user-id').value = id;
+  document.getElementById('reset-username-label').textContent = username;
+  document.getElementById('reset-pw-preview').textContent = '(akan digenerate server)';
+  openModal('modal-reset');
+}
+
+async function doReset() {
+  const id = document.getElementById('reset-user-id').value;
+  try {
+    const res = await apiFetch(`/users/${id}/reset-password`, { method: 'POST' });
+    document.getElementById('reset-pw-preview').textContent = res.temp_password;
+    toast(`Password '${res.username}' berhasil direset`, 'success');
+    // Tampilkan password sebentar lalu tutup
+    setTimeout(() => closeModal('modal-reset'), 6000);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Helpers ───────────────────────────────────────────── */
+function resetForm() {
+  ['f-nama','f-username','f-email','f-password'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-role').value    = 'operator';
+  document.getElementById('f-wilayah').value = '';
+  document.getElementById('f-aktif').checked = true;
+  document.getElementById('f-username').disabled = false;
+  onRoleChange();
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeAgo(isoStr) {
+  const diff = (Date.now() - new Date(isoStr)) / 1000;
+  if (diff < 60)       return 'Baru saja';
+  if (diff < 3600)     return `${Math.floor(diff/60)} menit lalu`;
+  if (diff < 86400)    return `${Math.floor(diff/3600)} jam lalu`;
+  if (diff < 2592000)  return `${Math.floor(diff/86400)} hari lalu`;
+  return new Date(isoStr).toLocaleDateString('id-ID');
+}
+
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>

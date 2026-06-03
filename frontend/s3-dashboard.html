@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,7 @@
   <title>S3 — Dashboard Ringkasan PDRB | SIKALTARA Kaltara</title>
   <meta name="description" content="Dashboard Ringkasan PDRB Kalimantan Utara — KPI, tren, distribusi, laju pertumbuhan, dan kelengkapan data">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/s3-dashboard.css">
 </head>
 <body>
@@ -136,6 +137,9 @@
 <div id="toast-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
 <script src="js/api.js"></script>
 <script src="js/s3-dashboard.js"></script>
 </body>

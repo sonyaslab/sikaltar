@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>S1.R — Rasio | SIKALTARA PDRB Kaltara</title>
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/table.css">
   <style>
     .rasio-default { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.82rem; }
@@ -159,6 +160,9 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>AUTH.requireAuth(); LAYOUT.init();</script>
 <script src="js/api.js"></script>
 <script src="js/sse.js"></script>
 <script src="js/filters.js"></script>

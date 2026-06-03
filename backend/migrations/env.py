@@ -33,6 +33,7 @@ from app.models import (  # noqa: F401 — import untuk metadata detection
     InputProduksi, InputHarga, InputIndeksDeflator,
     LkHasil, PdrbRekap,
 )
+from app.models.user import User  # noqa: F401 — wajib agar tabel users terdeteksi
 
 target_metadata = Base.metadata
 
