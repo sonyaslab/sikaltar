@@ -1,0 +1,100 @@
+INFO:     Started server process [183576]
+INFO:     Waiting for application startup.
+2026-06-03 01:35:53,047 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:35:53,048 INFO sqlalchemy.engine.Engine SELECT 1
+2026-06-03 01:35:53,048 INFO sqlalchemy.engine.Engine [generated in 0.00077s] ()
+2026-06-03 01:35:53,048 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[SIKALTARA] ✅ Koneksi database berhasil
+2026-06-03 01:36:40,490 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:36:40,539 INFO sqlalchemy.engine.Engine SELECT count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif = 1
+2026-06-03 01:36:40,539 INFO sqlalchemy.engine.Engine [generated in 0.00034s] ()
+2026-06-03 01:36:40,543 INFO sqlalchemy.engine.Engine SELECT count(kategori_pdrb.id) AS count_1
+FROM kategori_pdrb
+2026-06-03 01:36:40,543 INFO sqlalchemy.engine.Engine [generated in 0.00022s] ()
+2026-06-03 01:36:40,545 INFO sqlalchemy.engine.Engine SELECT count(rasio_referensi.id) AS count_1
+FROM rasio_referensi
+2026-06-03 01:36:40,545 INFO sqlalchemy.engine.Engine [generated in 0.00025s] ()
+2026-06-03 01:36:40,548 INFO sqlalchemy.engine.Engine SELECT audit_master.id AS audit_master_id, audit_master.tabel_nama AS audit_master_tabel_nama, audit_master.record_id AS audit_master_record_id, audit_master.aksi AS audit_master_aksi, audit_master.kolom_ubah AS audit_master_kolom_ubah, audit_master.nilai_lama AS audit_master_nilai_lama, audit_master.nilai_baru AS audit_master_nilai_baru, audit_master.user_id AS audit_master_user_id, audit_master.user_nama AS audit_master_user_nama, audit_master.waktu AS audit_master_waktu, audit_master.alasan AS audit_master_alasan, audit_master.berlaku_mulai AS audit_master_berlaku_mulai
+FROM audit_master ORDER BY audit_master.waktu DESC
+ LIMIT ? OFFSET ?
+2026-06-03 01:36:40,548 INFO sqlalchemy.engine.Engine [generated in 0.00020s] (5, 0)
+INFO:     127.0.0.1:37334 - "GET /api/master/summary HTTP/1.1" 200 OK
+2026-06-03 01:36:40,551 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:33390 - "GET /app/admin/master/komoditas.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33390 - "GET /app/css/main.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33394 - "GET /app/css/mdm.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33410 - "GET /app/js/mdm-api.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33414 - "GET /app/js/mdm-utils.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33418 - "GET /app/admin/master/master-komoditas.js HTTP/1.1" 200 OK
+2026-06-03 01:37:37,082 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:37:37,084 INFO sqlalchemy.engine.Engine SELECT master_satuan.id AS master_satuan_id, master_satuan.kode AS master_satuan_kode, master_satuan.nama AS master_satuan_nama, master_satuan.keterangan AS master_satuan_keterangan, master_satuan.aktif AS master_satuan_aktif
+FROM master_satuan
+WHERE master_satuan.aktif IS 1 ORDER BY master_satuan.kode
+2026-06-03 01:37:37,084 INFO sqlalchemy.engine.Engine [generated in 0.00030s] ()
+2026-06-03 01:37:37,087 INFO sqlalchemy.engine.Engine SELECT komoditas.satuan_produksi AS komoditas_satuan_produksi, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.satuan_produksi
+2026-06-03 01:37:37,087 INFO sqlalchemy.engine.Engine [generated in 0.00021s] ()
+INFO:     127.0.0.1:33418 - "GET /api/mdm/satuan HTTP/1.1" 200 OK
+2026-06-03 01:37:37,093 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-03 01:37:37,095 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:37:37,096 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan
+2026-06-03 01:37:37,096 INFO sqlalchemy.engine.Engine [generated in 0.00019s] ()
+2026-06-03 01:37:37,098 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:37:37,099 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan, kategori_pdrb.kode
+2026-06-03 01:37:37,100 INFO sqlalchemy.engine.Engine [generated in 0.00017s] ()
+2026-06-03 01:37:37,102 INFO sqlalchemy.engine.Engine SELECT komoditas.kategori_kode AS komoditas_kategori_kode, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.kategori_kode
+2026-06-03 01:37:37,102 INFO sqlalchemy.engine.Engine [generated in 0.00025s] ()
+2026-06-03 01:37:37,112 INFO sqlalchemy.engine.Engine SELECT komoditas.id AS komoditas_id, komoditas.kode_internal AS komoditas_kode_internal, komoditas.nama AS komoditas_nama, komoditas.kategori_kode AS komoditas_kategori_kode, komoditas.satuan_produksi AS komoditas_satuan_produksi, komoditas.satuan_harga AS komoditas_satuan_harga, komoditas.faktor_konversi AS komoditas_faktor_konversi, komoditas.wujud_produksi AS komoditas_wujud_produksi, komoditas.aktif AS komoditas_aktif, komoditas.klui_1990 AS komoditas_klui_1990, komoditas.kbli_2005 AS komoditas_kbli_2005, komoditas.kbli_2009 AS komoditas_kbli_2009, komoditas.kbki_2010 AS komoditas_kbki_2010, komoditas.identitas AS komoditas_identitas, komoditas.pdrb_kbli_kode AS komoditas_pdrb_kbli_kode, komoditas.pdrb_kbli_uraian AS komoditas_pdrb_kbli_uraian, komoditas.klui_uraian AS komoditas_klui_uraian, komoditas.catatan_varietas AS komoditas_catatan_varietas, komoditas.indeks_deflator AS komoditas_indeks_deflator, komoditas.indeks_dbl_defl AS komoditas_indeks_dbl_defl, komoditas.urutan_tampil AS komoditas_urutan_tampil, komoditas.berlaku_mulai AS komoditas_berlaku_mulai, komoditas.berlaku_sampai AS komoditas_berlaku_sampai, komoditas.digantikan_oleh AS komoditas_digantikan_oleh, komoditas.keterangan AS komoditas_keterangan, komoditas.produk_jadi AS komoditas_produk_jadi, komoditas.punya_wip AS komoditas_punya_wip, komoditas.punya_cbr AS komoditas_punya_cbr, komoditas.punya_output_ikutan AS komoditas_punya_output_ikutan, komoditas.metode_harga AS komoditas_metode_harga, kategori_pdrb_1.id AS kategori_pdrb_1_id, kategori_pdrb_1.kode AS kategori_pdrb_1_kode, kategori_pdrb_1.nama AS kategori_pdrb_1_nama, kategori_pdrb_1.parent_kode AS kategori_pdrb_1_parent_kode, kategori_pdrb_1.level AS kategori_pdrb_1_level, kategori_pdrb_1.metode_adhb AS kategori_pdrb_1_metode_adhb, kategori_pdrb_1.metode_adhk AS kategori_pdrb_1_metode_adhk, kategori_pdrb_1.urutan AS kategori_pdrb_1_urutan
+FROM komoditas LEFT OUTER JOIN kategori_pdrb AS kategori_pdrb_1 ON komoditas.kategori_kode = kategori_pdrb_1.kode
+WHERE komoditas.aktif = 1
+2026-06-03 01:37:37,113 INFO sqlalchemy.engine.Engine [generated in 0.00039s] ()
+INFO:     127.0.0.1:33410 - "GET /api/mdm/kategori?aktif_only=true HTTP/1.1" 200 OK
+2026-06-03 01:37:37,114 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:33414 - "GET /api/master/komoditas?q=&kategori=&status=aktif&kbli= HTTP/1.1" 200 OK
+2026-06-03 01:37:37,119 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:39316 - "GET /app/admin/master/komoditas.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39316 - "GET /app/css/main.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39320 - "GET /app/css/mdm.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39324 - "GET /app/js/mdm-api.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39326 - "GET /app/js/mdm-utils.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39328 - "GET /app/admin/master/master-komoditas.js HTTP/1.1" 200 OK
+2026-06-03 01:45:32,498 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:45:32,500 INFO sqlalchemy.engine.Engine SELECT master_satuan.id AS master_satuan_id, master_satuan.kode AS master_satuan_kode, master_satuan.nama AS master_satuan_nama, master_satuan.keterangan AS master_satuan_keterangan, master_satuan.aktif AS master_satuan_aktif
+FROM master_satuan
+WHERE master_satuan.aktif IS 1 ORDER BY master_satuan.kode
+2026-06-03 01:45:32,500 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,503 INFO sqlalchemy.engine.Engine SELECT komoditas.satuan_produksi AS komoditas_satuan_produksi, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.satuan_produksi
+2026-06-03 01:45:32,503 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+INFO:     127.0.0.1:39328 - "GET /api/mdm/satuan HTTP/1.1" 200 OK
+2026-06-03 01:45:32,507 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-03 01:45:32,507 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:45:32,508 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan, kategori_pdrb.kode
+2026-06-03 01:45:32,508 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,509 INFO sqlalchemy.engine.Engine SELECT komoditas.kategori_kode AS komoditas_kategori_kode, count(komoditas.id) AS count_1
+FROM komoditas
+WHERE komoditas.aktif IS 1 GROUP BY komoditas.kategori_kode
+2026-06-03 01:45:32,509 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+INFO:     127.0.0.1:39324 - "GET /api/mdm/kategori?aktif_only=true HTTP/1.1" 200 OK
+2026-06-03 01:45:32,511 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-03 01:45:32,511 INFO sqlalchemy.engine.Engine SELECT kategori_pdrb.id AS kategori_pdrb_id, kategori_pdrb.kode AS kategori_pdrb_kode, kategori_pdrb.nama AS kategori_pdrb_nama, kategori_pdrb.parent_kode AS kategori_pdrb_parent_kode, kategori_pdrb.level AS kategori_pdrb_level, kategori_pdrb.metode_adhb AS kategori_pdrb_metode_adhb, kategori_pdrb.metode_adhk AS kategori_pdrb_metode_adhk, kategori_pdrb.urutan AS kategori_pdrb_urutan
+FROM kategori_pdrb ORDER BY kategori_pdrb.urutan
+2026-06-03 01:45:32,511 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,512 INFO sqlalchemy.engine.Engine SELECT komoditas.id AS komoditas_id, komoditas.kode_internal AS komoditas_kode_internal, komoditas.nama AS komoditas_nama, komoditas.kategori_kode AS komoditas_kategori_kode, komoditas.satuan_produksi AS komoditas_satuan_produksi, komoditas.satuan_harga AS komoditas_satuan_harga, komoditas.faktor_konversi AS komoditas_faktor_konversi, komoditas.wujud_produksi AS komoditas_wujud_produksi, komoditas.aktif AS komoditas_aktif, komoditas.klui_1990 AS komoditas_klui_1990, komoditas.kbli_2005 AS komoditas_kbli_2005, komoditas.kbli_2009 AS komoditas_kbli_2009, komoditas.kbki_2010 AS komoditas_kbki_2010, komoditas.identitas AS komoditas_identitas, komoditas.pdrb_kbli_kode AS komoditas_pdrb_kbli_kode, komoditas.pdrb_kbli_uraian AS komoditas_pdrb_kbli_uraian, komoditas.klui_uraian AS komoditas_klui_uraian, komoditas.catatan_varietas AS komoditas_catatan_varietas, komoditas.indeks_deflator AS komoditas_indeks_deflator, komoditas.indeks_dbl_defl AS komoditas_indeks_dbl_defl, komoditas.urutan_tampil AS komoditas_urutan_tampil, komoditas.berlaku_mulai AS komoditas_berlaku_mulai, komoditas.berlaku_sampai AS komoditas_berlaku_sampai, komoditas.digantikan_oleh AS komoditas_digantikan_oleh, komoditas.keterangan AS komoditas_keterangan, komoditas.produk_jadi AS komoditas_produk_jadi, komoditas.punya_wip AS komoditas_punya_wip, komoditas.punya_cbr AS komoditas_punya_cbr, komoditas.punya_output_ikutan AS komoditas_punya_output_ikutan, komoditas.metode_harga AS komoditas_metode_harga, kategori_pdrb_1.id AS kategori_pdrb_1_id, kategori_pdrb_1.kode AS kategori_pdrb_1_kode, kategori_pdrb_1.nama AS kategori_pdrb_1_nama, kategori_pdrb_1.parent_kode AS kategori_pdrb_1_parent_kode, kategori_pdrb_1.level AS kategori_pdrb_1_level, kategori_pdrb_1.metode_adhb AS kategori_pdrb_1_metode_adhb, kategori_pdrb_1.metode_adhk AS kategori_pdrb_1_metode_adhk, kategori_pdrb_1.urutan AS kategori_pdrb_1_urutan
+FROM komoditas LEFT OUTER JOIN kategori_pdrb AS kategori_pdrb_1 ON komoditas.kategori_kode = kategori_pdrb_1.kode
+WHERE komoditas.aktif = 1
+2026-06-03 01:45:32,512 INFO sqlalchemy.engine.Engine [cached since 475.4s ago] ()
+2026-06-03 01:45:32,513 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:39320 - "GET /api/master/komoditas?q=&kategori=&status=aktif&kbli= HTTP/1.1" 200 OK
+2026-06-03 01:45:32,516 INFO sqlalchemy.engine.Engine ROLLBACK

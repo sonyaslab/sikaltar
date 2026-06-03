@@ -210,9 +210,6 @@ def test_subkategori_tanpa_komoditas(db: Session, setup_kalkulasi):
 
 def test_faktor_konversi_sawit(db: Session):
     """Produksi TBS × faktor_konversi 0.20 = produksi CPO."""
-    connection = db.bind.connect()
-    Base.metadata.create_all(db.bind)
-
     # Buat komoditas CPO dengan faktor konversi 0.20
     kat = KategoriPdrb(kode="1.1.e", nama="Perkebunan Tahunan", parent_kode="1.1", level=3,
                        metode_adhb="Produksi", metode_adhk="Revaluasi", urutan=16)
