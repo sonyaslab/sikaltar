@@ -76,6 +76,7 @@ from app.api.mdm_audit import router as mdm_audit_router           # noqa: E402
 from app.api.mdm_metode import router as mdm_metode_router         # noqa: E402
 from app.api.s3 import router as s3_router                         # noqa: E402
 from app.api.master_komoditas import router as master_komoditas_router # noqa: E402
+from app.api.master_summary import router as master_summary_router # noqa: E402
 
 app.include_router(referensi_router, prefix="/api", tags=["Referensi"])
 app.include_router(harga_router, prefix="/api/input/harga", tags=["S1.H — Harga"])
@@ -95,6 +96,7 @@ app.include_router(mdm_faktor_router,      prefix="/api/mdm/faktor-konversi", ta
 app.include_router(mdm_audit_router,       prefix="/api/mdm/audit",           tags=["MDM — Audit Log"])
 app.include_router(mdm_metode_router,      prefix="/api/mdm/metode",          tags=["MDM — Metode Estimasi"])
 app.include_router(master_komoditas_router, prefix="/api/master/komoditas",    tags=["Master — Komoditas"])
+app.include_router(master_summary_router,   prefix="/api/master/summary",      tags=["Master — Summary"])
 
 
 
