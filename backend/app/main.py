@@ -8,7 +8,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -141,14 +141,37 @@ app.include_router(
 
 # ─── Frontend Static Files ────────────────────────────────────────────────────
 frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
+
 if frontend_dir.exists():
-    # Serve semua file statis di /app/*
+    # Mount lengkap di /app/* (untuk production + nginx)
     app.mount("/app", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+
+    # ── DEV MODE (tanpa Docker/Nginx) ──────────────────────────────────────────
+    # Mount /css dan /js langsung dari root agar <link href="css/main.css"> dan
+    # <script src="js/auth.js"> di index.html bisa resolve ke /css/... dan /js/...
+    for _sub in ("css", "js"):
+        _sub_path = frontend_dir / _sub
+        if _sub_path.exists():
+            app.mount(f"/{_sub}", StaticFiles(directory=str(_sub_path)), name=_sub)
 
 
 @app.get("/", include_in_schema=False)
 def root():
+    """Serve index.html langsung dari root. CSS & JS di-handle mount /css dan /js."""
     idx = frontend_dir / "index.html"
     if idx.exists():
         return FileResponse(str(idx))
     return {"aplikasi": "SIKALTARA", "versi": "2.0.0", "ui": "/app/index.html"}
+
+
+@app.get("/{filename}.html", include_in_schema=False)
+def serve_html_page(filename: str):
+    """
+    Serve semua halaman HTML dari root path (dev tanpa nginx).
+    Dibutuhkan agar navigasi antar halaman berfungsi — misal /login.html,
+    /s1-harga.html, /s3-dashboard.html, /admin-users.html, dll.
+    """
+    html_file = frontend_dir / f"{filename}.html"
+    if html_file.exists():
+        return FileResponse(str(html_file))
+    raise HTTPException(status_code=404, detail=f"Halaman '{filename}.html' tidak ditemukan.")
