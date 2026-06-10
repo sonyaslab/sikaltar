@@ -1,0 +1,28 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ── Virtualenv (JANGAN commit) ──
+.venv/
+venv/
+env/
+
+# ── Rahasia & konfigurasi lokal ──
+.env
+*.env
+!.env.example
+
+# ── Artefak runtime (JANGAN commit) ──
+*.db
+*.sqlite
+*.sqlite3
+*.log
+server.log
+test_sikaltara.db
+
+# ── Editor / OS ──
+.idea/
+.vscode/
+.DS_Store

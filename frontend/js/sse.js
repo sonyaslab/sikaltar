@@ -15,7 +15,10 @@ class CascadeSSE {
 
   connect() {
     if (this._es) return;
-    this._es = new EventSource('/api/events');
+    // FIX: EventSource tidak bisa kirim header Authorization, jadi token
+    // dikirim lewat query-param. Kunci token aplikasi ini = 'sikaltar_token'.
+    const token = localStorage.getItem('sikaltar_token') || '';
+    this._es = new EventSource('/api/events?token=' + encodeURIComponent(token));
 
     this._es.addEventListener('connected', (e) => {
       this._connected = true;
@@ -73,7 +76,7 @@ class CascadeSSE {
     if (!this._listeners[eventType]) return;
     this._listeners[eventType] = this._listeners[eventType].filter(f => f !== fn);
   }
-
+ 
   onTask(taskId, fn) {
     this._taskListeners[taskId] = fn;
     return () => { delete this._taskListeners[taskId]; };

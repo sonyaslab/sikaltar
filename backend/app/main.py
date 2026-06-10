@@ -104,8 +104,7 @@ app.include_router(rasio_router, prefix="/api/rasio", tags=["S1.R — Rasio"],
                    dependencies=_auth_dep)
 app.include_router(deflator_router, prefix="/api/input/deflator", tags=["S1.I — Deflator"],
                    dependencies=_auth_dep)
-app.include_router(sse_router, prefix="/api", tags=["SSE Events"],
-                   dependencies=_auth_dep)
+app.include_router(sse_router, prefix="/api", tags=["SSE Events"])
 app.include_router(s2_router, prefix="/api/s2", tags=["S2 — Lembar Kerja Hasil"],
                    dependencies=_auth_dep)
 app.include_router(s3_router, prefix="/api/s3", tags=["S3 — Tabel Pokok & Dashboard"],

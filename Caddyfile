@@ -1,0 +1,14 @@
+# Ganti domain di .env (DOMAIN). Caddy otomatis mengurus sertifikat HTTPS (Let's Encrypt).
+{$DOMAIN} {
+    encode gzip
+    # SSE butuh streaming tanpa buffering
+    reverse_proxy api:8000 {
+        flush_interval -1
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000;"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

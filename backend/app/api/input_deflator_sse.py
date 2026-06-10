@@ -15,6 +15,8 @@ from app.models.input_data import InputIndeksDeflator
 from app.models.kategori_pdrb import KategoriPdrb
 from app.schemas.rasio_deflator import DeflatorPatch
 from app.services.cascade_service import enqueue_cascade
+from app.dependencies.auth_sse import require_sse_token
+from app.models.user import User
 
 deflator_router = APIRouter()
 sse_router = APIRouter()
@@ -192,7 +194,8 @@ async def _event_generator(task_id: Optional[str]) -> AsyncGenerator[str, None]:
 
 
 @sse_router.get("/events", summary="SSE stream — cascade status real-time")
-async def sse_events(task_id: Optional[str] = Query(None)):
+async def sse_events(task_id: Optional[str] = Query(None),
+                    _user: User = Depends(require_sse_token),):
     """
     Server-Sent Events untuk status cascade recalculation.
     Frontend connect ke endpoint ini dan dengarkan event 'cascade'.

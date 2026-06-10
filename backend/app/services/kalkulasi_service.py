@@ -1,11 +1,17 @@
 """
-Service: KalkulasiService
+Service: KalkulasiService  (VERSI DIPERBAIKI)
 Implementasi rumus perhitungan LK PDRB sesuai kaidah BPS SNA 2008.
 
-Metode yang didukung:
-  - Produksi + Revaluasi  : Kategori A (Pertanian), B (Pertambangan)
-  - Deflasi               : Kategori F (Konstruksi), G.2, H, I, J, K, L, M,N, O, P, Q, R,S,T,U
-  - Double Deflasi        : Kategori C (Industri Pengolahan)
+PERUBAHAN vs versi lama (cari penanda  # [FIX] ):
+  [FIX-2] Output Sekunder di tingkat subkategori memakai jenis rasio 'OS_SEK'
+          (BUKAN 'OS'). Ini mencegah penghitungan ganda: 'OS' dipakai untuk
+          Output Ikutan per-komoditas, 'OS_SEK' untuk Output Sekunder per-subkategori.
+          Default 'OS_SEK' = 0, jadi jika tidak diisi tidak ada efek apa pun.
+  [FIX-7] Harga berlaku kini punya fallback ke wilayah provinsi '65' (simetris
+          dengan harga konstan).
+  [FIX-3] hitung_subkategori mencatat jumlah komoditas yang dilewati (skipped)
+          agar data tidak lengkap tidak "hilang diam-diam".
+  (hitung_kategori_deflasi tetap dipakai — sekarang dipanggil oleh cascade.)
 
 Unit output: Juta Rupiah (Rp 1.000.000)
 """
@@ -80,6 +86,10 @@ class HasilSubkategori:
     ka_adhk: Decimal = Decimal(0)
     ntb_adhk: Decimal = Decimal(0)
 
+    # [FIX-3] Pelacakan kelengkapan data
+    komoditas_dihitung: int = 0
+    komoditas_dilewati: int = 0
+
     peringatan: list[str] = field(default_factory=list)
 
 
@@ -93,7 +103,8 @@ def _get_harga_berlaku(
 ) -> Optional[Decimal]:
     """
     Ambil harga_berlaku dari input_harga.
-    Urutan lookup: (komoditas, wilayah, tahun, triwulan) → (komoditas, wilayah, tahun, NULL).
+    Urutan lookup: (komoditas, wilayah, tahun, triwulan) → (komoditas, wilayah, tahun, NULL)
+                   → [FIX-7] fallback ke provinsi '65'.
     """
     row = (
         db.query(InputHarga)
@@ -108,7 +119,7 @@ def _get_harga_berlaku(
     if row and row.harga_berlaku:
         return Decimal(str(row.harga_berlaku))
 
-    # Fallback: harga tahunan rata-rata
+    # Fallback: harga tahunan rata-rata (triwulan NULL)
     if triwulan is not None:
         row = (
             db.query(InputHarga)
@@ -122,6 +133,10 @@ def _get_harga_berlaku(
         )
         if row and row.harga_berlaku:
             return Decimal(str(row.harga_berlaku))
+
+    # [FIX-7] Fallback ke harga provinsi 65 bila kabupaten kosong
+    if wilayah_kode != "65":
+        return _get_harga_berlaku(db, komoditas_id, "65", tahun, triwulan)
     return None
 
 
@@ -167,15 +182,14 @@ def hitung_output_komoditas(
 
     ADHB:
       output_utama_b  = kuantum × harga_berlaku / 1.000.000
-      output_ikutan_b = output_utama_b × rasio_OS(ADHB, tahun)
+      output_ikutan_b = output_utama_b × rasio_OS(ADHB, tahun)   ← Output Ikutan per-komoditas
       wip_b           = output_utama_b × rasio_WIP(ADHB, tahun)
 
-    ADHK:
+    ADHK (Revaluasi: kuantum sama, harga konstan 2010, rasio tahun DASAR):
       output_utama_k  = kuantum × harga_konstan_2010 / 1.000.000
-      output_ikutan_k = output_utama_k × rasio_OS(ADHK, 2010)     ← pakai rasio tahun dasar
-      wip_k           = output_utama_k × rasio_WIP(ADHK, 2010)    ← pakai rasio tahun dasar
+      output_ikutan_k = output_utama_k × rasio_OS(ADHK, 2010)
+      wip_k           = output_utama_k × rasio_WIP(ADHK, 2010)
     """
-    # Ambil metadata komoditas
     komoditas = db.get(Komoditas, komoditas_id)
     if not komoditas:
         hasil = HasilKomoditas(
@@ -206,19 +220,25 @@ def hitung_output_komoditas(
         .first()
     )
     if not prod_row or prod_row.kuantum is None:
-        hasil.error = f"Data produksi tidak tersedia: komoditas={komoditas_id}, wilayah={wilayah_kode}, tahun={tahun}, tw={triwulan}"
+        hasil.error = (
+            f"Data produksi tidak tersedia: komoditas={komoditas_id}, "
+            f"wilayah={wilayah_kode}, tahun={tahun}, tw={triwulan}"
+        )
         return hasil
 
     kuantum = Decimal(str(prod_row.kuantum))
 
-    # Terapkan faktor konversi jika ada (mis: TBS → CPO)
+    # Faktor konversi (mis: TBS → CPO)
     if komoditas.faktor_konversi:
         kuantum = kuantum * Decimal(str(komoditas.faktor_konversi))
 
     # ── ADHB ──────────────────────────────────────────────────────────────
     harga_b = _get_harga_berlaku(db, komoditas_id, wilayah_kode, tahun, triwulan)
     if harga_b is None:
-        hasil.error = f"Harga berlaku tidak tersedia: komoditas={komoditas_id}, wilayah={wilayah_kode}, tahun={tahun}"
+        hasil.error = (
+            f"Harga berlaku tidak tersedia: komoditas={komoditas_id}, "
+            f"wilayah={wilayah_kode}, tahun={tahun}"
+        )
         return hasil
 
     output_utama_b = _round6(kuantum * harga_b / JUTA)
@@ -242,15 +262,17 @@ def hitung_output_komoditas(
     hasil.wip_adhb = wip_b
     hasil.output_sebelum_adj_adhb = _round6(output_utama_b + output_ikutan_b + wip_b)
 
-    # ── ADHK (Revaluasi: kuantum sama, harga konstan 2010) ────────────────
+    # ── ADHK (Revaluasi) ──────────────────────────────────────────────────
     harga_k = _get_harga_konstan(db, komoditas_id, wilayah_kode)
     if harga_k is None:
-        hasil.error = f"Harga konstan 2010 tidak tersedia: komoditas={komoditas_id}, wilayah={wilayah_kode}"
+        hasil.error = (
+            f"Harga konstan 2010 tidak tersedia: komoditas={komoditas_id}, "
+            f"wilayah={wilayah_kode}"
+        )
         return hasil
 
     output_utama_k = _round6(kuantum * harga_k / JUTA)
 
-    # ADHK menggunakan rasio tahun DASAR (2010), bukan tahun berjalan
     rasio_os_k = get_rasio_safe(
         db, "OS", "ADHK", TAHUN_DASAR,
         komoditas_id=komoditas_id, kategori_kode=kategori_kode,
@@ -282,16 +304,17 @@ def hitung_subkategori(
 ) -> HasilSubkategori:
     """
     Agregasi semua komoditas dalam subkategori → hitung ADJ, KA, NTB.
+    (Metode Produksi/Revaluasi — berbasis komoditas.)
 
     ADHB:
-      output_primer_b  = SUM(output_sebelum_adj_adhb) per komoditas
-      output_sekunder_b = output_primer_b × rasio_OS(subkat, ADHB, tahun)
-      adj_b            = output_primer_b × rasio_ADJ(subkat, ADHB, tahun)
-      output_total_b   = output_primer_b + output_sekunder_b + adj_b
-      ka_b             = output_total_b × rasio_KA(subkat, ADHB, tahun)
-      ntb_b            = output_total_b − ka_b
+      output_primer_b   = SUM(output_sebelum_adj_adhb) per komoditas
+      output_sekunder_b = output_primer_b × rasio_OS_SEK(subkat, ADHB, tahun)  # [FIX-2]
+      adj_b             = output_primer_b × rasio_ADJ(subkat, ADHB, tahun)
+      output_total_b    = output_primer_b + output_sekunder_b + adj_b
+      ka_b              = output_total_b × rasio_KA(subkat, ADHB, tahun)
+      ntb_b             = output_total_b − ka_b
 
-    ADHK: sama, tapi semua rasio dari tahun DASAR (2010)
+    ADHK: sama, tapi semua rasio dari tahun DASAR (2010).
     """
     hasil = HasilSubkategori(
         subkategori_kode=subkategori_kode,
@@ -300,8 +323,6 @@ def hitung_subkategori(
         triwulan=triwulan,
     )
 
-    # Ambil semua komoditas dalam subkategori ini
-    from app.models.komoditas import Komoditas
     komoditas_list = (
         db.query(Komoditas)
         .filter(Komoditas.kategori_kode == subkategori_kode, Komoditas.aktif.is_(True))
@@ -309,19 +330,21 @@ def hitung_subkategori(
     )
 
     if not komoditas_list:
-        hasil.peringatan.append(f"Tidak ada komoditas aktif untuk subkategori {subkategori_kode!r}")
+        hasil.peringatan.append(
+            f"Tidak ada komoditas aktif untuk subkategori {subkategori_kode!r}"
+        )
         return hasil
 
-    # Jumlahkan output per komoditas
     total_primer_b = Decimal(0)
     total_primer_k = Decimal(0)
 
     for kom in komoditas_list:
         h = hitung_output_komoditas(db, kom.id, wilayah_kode, tahun, triwulan)
         if h.error:
-            # Komoditas dengan data tidak lengkap dilewati, dicatat sebagai peringatan
+            hasil.komoditas_dilewati += 1   # [FIX-3]
             hasil.peringatan.append(f"[{kom.kode_internal}] {h.error}")
             continue
+        hasil.komoditas_dihitung += 1
         total_primer_b += h.output_sebelum_adj_adhb
         total_primer_k += h.output_sebelum_adj_adhk
 
@@ -332,24 +355,25 @@ def hitung_subkategori(
         hasil.peringatan.append(f"Semua output_primer = 0 untuk {subkategori_kode!r} {tahun}")
         return hasil
 
-    # ── ADHB: ADJ + KA ────────────────────────────────────────────────────
-    try:
-        rasio_os_b = get_rasio(db, "OS", "ADHB", tahun, kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
-    except RasioTidakDitemukanError:
-        rasio_os_b = Decimal(0)
-        hasil.peringatan.append(f"Rasio OS ADHB tidak ditemukan untuk {subkategori_kode!r} tahun {tahun}")
+    # ── ADHB: Output Sekunder + ADJ + KA ──────────────────────────────────
+    # [FIX-2] Output Sekunder pakai 'OS_SEK' (default 0) → tidak menggandakan 'OS'
+    rasio_os_b = get_rasio_safe(db, "OS_SEK", "ADHB", tahun,
+                                kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
+                                default=Decimal(0))
 
     try:
-        rasio_adj_b = get_rasio(db, "ADJ", "ADHB", tahun, kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
+        rasio_adj_b = get_rasio(db, "ADJ", "ADHB", tahun,
+                                kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
     except RasioTidakDitemukanError:
         rasio_adj_b = Decimal(0)
-        hasil.peringatan.append(f"Rasio ADJ ADHB tidak ditemukan untuk {subkategori_kode!r} tahun {tahun}")
+        hasil.peringatan.append(f"Rasio ADJ ADHB tidak ditemukan untuk {subkategori_kode!r} {tahun}")
 
     try:
-        rasio_ka_b = get_rasio(db, "KA", "ADHB", tahun, kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
+        rasio_ka_b = get_rasio(db, "KA", "ADHB", tahun,
+                               kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
     except RasioTidakDitemukanError:
         rasio_ka_b = Decimal(0)
-        hasil.peringatan.append(f"Rasio KA ADHB tidak ditemukan untuk {subkategori_kode!r} tahun {tahun}")
+        hasil.peringatan.append(f"Rasio KA ADHB tidak ditemukan untuk {subkategori_kode!r} {tahun}")
 
     os_b = _round6(total_primer_b * rasio_os_b)
     adj_b = _round6(total_primer_b * rasio_adj_b)
@@ -363,21 +387,17 @@ def hitung_subkategori(
     hasil.ka_adhb = ka_b
     hasil.ntb_adhb = _round6(total_b - ka_b)
 
-    # ── ADHK: ADJ + KA (rasio tahun dasar 2010) ───────────────────────────
-    try:
-        rasio_os_k = get_rasio(db, "OS", "ADHK", TAHUN_DASAR, kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
-    except RasioTidakDitemukanError:
-        rasio_os_k = Decimal(0)
+    # ── ADHK: rasio tahun dasar 2010 ──────────────────────────────────────
+    rasio_os_k = get_rasio_safe(db, "OS_SEK", "ADHK", TAHUN_DASAR,
+                                kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
+                                default=Decimal(0))
 
-    try:
-        rasio_adj_k = get_rasio(db, "ADJ", "ADHK", TAHUN_DASAR, kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
-    except RasioTidakDitemukanError:
-        rasio_adj_k = Decimal(0)
-
-    try:
-        rasio_ka_k = get_rasio(db, "KA", "ADHK", TAHUN_DASAR, kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
-    except RasioTidakDitemukanError:
-        rasio_ka_k = Decimal(0)
+    rasio_adj_k = get_rasio_safe(db, "ADJ", "ADHK", TAHUN_DASAR,
+                                 kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
+                                 default=Decimal(0))
+    rasio_ka_k = get_rasio_safe(db, "KA", "ADHK", TAHUN_DASAR,
+                                kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
+                                default=Decimal(0))
 
     os_k = _round6(total_primer_k * rasio_os_k)
     adj_k = _round6(total_primer_k * rasio_adj_k)
@@ -403,11 +423,13 @@ def hitung_kategori_deflasi(
     output_total_adhb: Optional[Decimal] = None,
 ) -> HasilSubkategori:
     """
-    Hitung NTB untuk kategori dengan metode DEFLASI.
-    Digunakan untuk: Konstruksi (6), Pemerintahan (14), sebagian Transportasi (8.x), dll.
+    NTB untuk kategori non-produksi dengan metode DEFLASI (tunggal).
+    Dipakai untuk: Konstruksi (6), Perdagangan (7), Transportasi (8),
+    Jasa (9–17), dll — kategori tanpa data kuantum×harga.
 
-    ADHB: output_total_adhb = input langsung dari user (bukan produksi × harga)
+    ADHB: output_total_adhb = input langsung user (disimpan di pdrb_rekap.output_total_adhb)
     ADHK: output_total_adhk = output_total_adhb / (indeks_deflator / 100)
+    NTB  = output_total − (output_total × rasio_KA)
     """
     hasil = HasilSubkategori(
         subkategori_kode=kategori_kode,
@@ -416,7 +438,6 @@ def hitung_kategori_deflasi(
         triwulan=triwulan,
     )
 
-    # Ambil indeks deflator
     deflator_row = (
         db.query(InputIndeksDeflator)
         .filter(
@@ -427,6 +448,18 @@ def hitung_kategori_deflasi(
         )
         .first()
     )
+    # Fallback indeks ke provinsi 65
+    if not deflator_row and wilayah_kode != "65":
+        deflator_row = (
+            db.query(InputIndeksDeflator)
+            .filter(
+                InputIndeksDeflator.kategori_kode == kategori_kode,
+                InputIndeksDeflator.wilayah_kode == "65",
+                InputIndeksDeflator.tahun == tahun,
+                InputIndeksDeflator.triwulan == triwulan,
+            )
+            .first()
+        )
     if not deflator_row:
         hasil.peringatan.append(
             f"Indeks deflator tidak tersedia: kategori={kategori_kode!r}, "
@@ -435,8 +468,11 @@ def hitung_kategori_deflasi(
         return hasil
 
     indeks = Decimal(str(deflator_row.nilai_indeks))
+    if indeks == 0:
+        hasil.peringatan.append(f"Indeks deflator = 0 untuk {kategori_kode!r} {tahun}")
+        return hasil
 
-    # Gunakan output_adhb yang sudah tersimpan di pdrb_rekap jika tidak disuplai
+    # Output ADHB: dari argumen, atau dari pdrb_rekap (input langsung user)
     if output_total_adhb is None:
         from app.models.hasil import PdrbRekap
         rekap = (
@@ -452,26 +488,29 @@ def hitung_kategori_deflasi(
         if rekap and rekap.output_total_adhb:
             output_total_adhb = Decimal(str(rekap.output_total_adhb))
         else:
-            hasil.peringatan.append(f"Output ADHB tidak tersedia untuk kategori deflasi {kategori_kode!r}")
+            hasil.peringatan.append(
+                f"Output ADHB tidak tersedia untuk kategori deflasi {kategori_kode!r} "
+                f"(isi pdrb_rekap.output_total_adhb terlebih dulu)"
+            )
             return hasil
 
     output_total_adhk = _round6(output_total_adhb / (indeks / Decimal(100)))
 
-    # Rasio KA ADHB
     rasio_ka_b = get_rasio_safe(db, "KA", "ADHB", tahun, kategori_kode=kategori_kode,
-                                 wilayah_kode=wilayah_kode, default=Decimal(0))
+                                wilayah_kode=wilayah_kode, default=Decimal(0))
     ka_b = _round6(output_total_adhb * rasio_ka_b)
 
-    # Rasio KA ADHK (tahun dasar)
     rasio_ka_k = get_rasio_safe(db, "KA", "ADHK", TAHUN_DASAR, kategori_kode=kategori_kode,
-                                 wilayah_kode=wilayah_kode, default=Decimal(0))
+                                wilayah_kode=wilayah_kode, default=Decimal(0))
     ka_k = _round6(output_total_adhk * rasio_ka_k)
 
+    hasil.output_primer_adhb = output_total_adhb
     hasil.output_total_adhb = output_total_adhb
     hasil.rasio_ka_adhb = rasio_ka_b
     hasil.ka_adhb = ka_b
     hasil.ntb_adhb = _round6(output_total_adhb - ka_b)
 
+    hasil.output_primer_adhk = output_total_adhk
     hasil.output_total_adhk = output_total_adhk
     hasil.rasio_ka_adhk = rasio_ka_k
     hasil.ka_adhk = ka_k
@@ -489,10 +528,7 @@ def simpan_lk_hasil(
     hasil: HasilKomoditas,
     flush: bool = True,
 ) -> LkHasil:
-    """
-    Simpan atau update hasil kalkulasi ke tabel lk_hasil.
-    Gunakan upsert (UPDATE jika sudah ada, INSERT jika belum).
-    """
+    """Upsert hasil per-komoditas ke lk_hasil."""
     from datetime import datetime
 
     row = (
@@ -507,14 +543,11 @@ def simpan_lk_hasil(
     )
     if not row:
         row = LkHasil(
-            komoditas_id=komoditas_id,
-            wilayah_kode=wilayah_kode,
-            tahun=tahun,
-            triwulan=triwulan,
+            komoditas_id=komoditas_id, wilayah_kode=wilayah_kode,
+            tahun=tahun, triwulan=triwulan,
         )
         db.add(row)
 
-    # Update komponen
     row.output_utama_adhb = hasil.output_utama_adhb
     row.output_ikutan_adhb = hasil.output_ikutan_adhb
     row.wip_adhb = hasil.wip_adhb

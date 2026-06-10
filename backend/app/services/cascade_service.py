@@ -1,14 +1,19 @@
 """
-Service: CascadeService
-Sistem update otomatis — dipanggil setiap kali input berubah.
-Menjalankan recalculation cascade dari level komoditas → subkategori → kategori → PDRB total.
+Service: CascadeService  (VERSI DIPERBAIKI)
+Recalculation cascade: komoditas → subkategori → kategori → PDRB total.
 
-Alur:
-  Input berubah → invalidate cache → antrian Celery → recalculate → simpan → notifikasi
-
-Mendukung dua mode:
-  1. Synchronous (sync_recalculate)  : untuk testing / perubahan batch offline
-  2. Asynchronous via Celery (enqueue): untuk production, agar UI tidak freeze
+PERUBAHAN UTAMA vs versi lama (cari penanda  # [FIX] ):
+  [FIX-1a] Scope recalculation kini berbasis "kategori DAUN" (tidak punya child),
+           sehingga kategori level-1 yang tidak punya subkategori (mis. 5, 6, 10,
+           12, 13, 14, 15, 16, 17) IKUT terhitung. Versi lama hanya mengambil
+           level>=3 / level==2, jadi kategori-kategori itu tidak pernah dihitung.
+  [FIX-1b] Step 2 sekarang MEMILIH metode (dispatch) berdasarkan ada/tidaknya
+           komoditas + kolom metode kategori:
+              - ada komoditas              → hitung_subkategori (Produksi/Revaluasi)
+              - metode 'Langsung'          → pertahankan NTB yang diinput langsung
+              - selain itu                 → hitung_kategori_deflasi (Deflasi)
+           Versi lama selalu memakai hitung_subkategori untuk semua kategori,
+           sehingga ~12 kategori jasa tidak pernah terisi.
 """
 from __future__ import annotations
 
@@ -21,8 +26,8 @@ from sqlalchemy.orm import Session
 
 from app.models.hasil import LkHasil, PdrbRekap
 from app.models.komoditas import Komoditas
+from app.models.kategori_pdrb import KategoriPdrb
 from app.services.kalkulasi_service import (
-    HasilSubkategori,
     hitung_output_komoditas,
     hitung_subkategori,
     hitung_kategori_deflasi,
@@ -32,7 +37,6 @@ from app.services.agregasi_service import (
     agregasi_tahunan,
     simpan_rekap_dari_hasil,
     hitung_indikator_turunan,
-    hitung_semua_indikator_wilayah,
 )
 
 logger = logging.getLogger(__name__)
@@ -42,21 +46,24 @@ TriggerType = Literal["produksi", "harga", "deflator", "rasio_override"]
 KODE_PROVINSI = "65"
 KODE_KABKOTA = ["6501", "6502", "6503", "6504", "6571"]
 
+# [FIX-1b] Metode yang berbasis komoditas (produksi)
+METODE_PRODUKSI = {"PRODUKSI", "REVALUASI"}
+METODE_LANGSUNG = {"LANGSUNG", "PENDAPATAN", "PENGELUARAN"}  # NTB diinput langsung
+
 
 @dataclass
 class CascadeResult:
-    """Ringkasan hasil cascade recalculation."""
     trigger_type: str
     wilayah_kode: str
     tahun: int
     triwulan: Optional[int]
-    komoditas_affected: list[int]
-    subkategori_affected: list[str]
-    kategori_affected: list[str]
+    komoditas_affected: list
+    subkategori_affected: list
+    kategori_affected: list
     started_at: datetime
     finished_at: Optional[datetime] = None
-    errors: list[str] = None
-    warnings: list[str] = None
+    errors: list = None
+    warnings: list = None
 
     def __post_init__(self):
         if self.errors is None:
@@ -71,28 +78,23 @@ class CascadeResult:
         return None
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Helper hierarki
+# ─────────────────────────────────────────────────────────────────────────────
+
 def _get_kategori_kode(db: Session, komoditas_id: int) -> Optional[str]:
-    """Ambil kode subkategori dari komoditas."""
     kom = db.get(Komoditas, komoditas_id)
     return kom.kategori_kode if kom else None
 
 
 def _get_parent_kode(kategori_kode: str) -> Optional[str]:
-    """
-    Ambil kode parent dari kode kategori hierarkis.
-    '1.1.a' → '1.1', '1.1' → '1', '1' → None
-    """
     parts = kategori_kode.split(".")
     if len(parts) <= 1:
         return None
     return ".".join(parts[:-1])
 
 
-def _collect_ancestor_kodes(kategori_kode: str) -> list[str]:
-    """
-    Kumpulkan semua ancestor dari subkategori ke atas.
-    '1.1.a' → ['1.1', '1']
-    """
+def _collect_ancestor_kodes(kategori_kode: str) -> list:
     ancestors = []
     parent = _get_parent_kode(kategori_kode)
     while parent:
@@ -101,30 +103,43 @@ def _collect_ancestor_kodes(kategori_kode: str) -> list[str]:
     return ancestors
 
 
-def _invalidate_lk_hasil(
-    db: Session, komoditas_id: int, wilayah_kode: str, tahun: int, triwulan: Optional[int]
-) -> None:
-    """Tandai cache lk_hasil sebagai tidak valid."""
-    row = (
-        db.query(LkHasil)
-        .filter(
-            LkHasil.komoditas_id == komoditas_id,
-            LkHasil.wilayah_kode == wilayah_kode,
-            LkHasil.tahun == tahun,
-            LkHasil.triwulan == triwulan,
-        )
-        .first()
+def _semua_kode_set(db: Session) -> set:
+    return {kode for (kode,) in db.query(KategoriPdrb.kode).all()}
+
+
+def _kode_daun(db: Session) -> set:
+    """
+    [FIX-1a] Kategori DAUN = kode yang TIDAK menjadi parent bagi kode lain.
+    Inilah titik di mana NTB dihitung (lalu di-roll-up ke atas).
+    """
+    semua = _semua_kode_set(db)
+    parent_kodes = {
+        p for (p,) in db.query(KategoriPdrb.parent_kode)
+        .filter(KategoriPdrb.parent_kode.is_not(None)).distinct().all()
+    }
+    return {k for k in semua if k not in parent_kodes}
+
+
+def _resolve_metode(db: Session, kategori_kode: str) -> str:
+    kat = db.query(KategoriPdrb).filter(KategoriPdrb.kode == kategori_kode).first()
+    if not kat:
+        return ""
+    metode = (kat.metode_adhk or kat.metode_adhb or "").strip().upper()
+    return metode
+
+
+def _punya_komoditas(db: Session, kategori_kode: str) -> bool:
+    return (
+        db.query(Komoditas)
+        .filter(Komoditas.kategori_kode == kategori_kode, Komoditas.aktif.is_(True))
+        .count() > 0
     )
-    if row:
-        row.is_valid = False
-        db.flush()
 
 
-def _invalidate_pdrb_rekap(
+def _invalidate_pdrb_rekap_indikator(
     db: Session, kategori_kode: str, wilayah_kode: str, tahun: int, triwulan: Optional[int]
 ) -> None:
-    """Tandai rekap subkategori sebagai tidak valid (menghapus calculated_at lama)."""
-    # Tidak delete — cukup set semua komponen ke None untuk menandai stale
+    """Reset HANYA indikator turunan (nilai pokok & output ADHB input dipertahankan)."""
     rows = (
         db.query(PdrbRekap)
         .filter(
@@ -136,13 +151,16 @@ def _invalidate_pdrb_rekap(
         .all()
     )
     for row in rows:
-        # Hanya reset indikator turunan, bukan nilai pokok
         row.distribusi_pct = None
         row.laju_pertumbuhan_pct = None
         row.indeks_implisit = None
         row.laju_implisit_pct = None
     db.flush()
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Recalculation utama
+# ─────────────────────────────────────────────────────────────────────────────
 
 def sync_recalculate(
     db: Session,
@@ -153,33 +171,10 @@ def sync_recalculate(
     komoditas_id: Optional[int] = None,
     kategori_kode_scope: Optional[str] = None,
 ) -> CascadeResult:
-    """
-    Jalankan recalculation cascade secara SYNCHRONOUS.
-    Gunakan untuk: testing, batch update, atau trigger dari CLI.
-
-    Untuk production dengan banyak data, gunakan enqueue_cascade() + Celery.
-
-    Args:
-        db: Database session
-        trigger_type: Jenis perubahan yang memicu recalculation
-        wilayah_kode: Wilayah yang terdampak
-        tahun: Tahun kalkulasi
-        triwulan: Triwulan (None = tahunan)
-        komoditas_id: ID komoditas spesifik (jika trigger dari perubahan satu komoditas)
-        kategori_kode_scope: Override scope recalculation ke satu subkategori
-
-    Returns:
-        CascadeResult: Ringkasan hasil
-    """
     result = CascadeResult(
-        trigger_type=trigger_type,
-        wilayah_kode=wilayah_kode,
-        tahun=tahun,
-        triwulan=triwulan,
-        komoditas_affected=[],
-        subkategori_affected=[],
-        kategori_affected=[],
-        started_at=datetime.now(),
+        trigger_type=trigger_type, wilayah_kode=wilayah_kode, tahun=tahun,
+        triwulan=triwulan, komoditas_affected=[], subkategori_affected=[],
+        kategori_affected=[], started_at=datetime.now(),
     )
 
     logger.info(
@@ -187,136 +182,133 @@ def sync_recalculate(
         f"tahun={tahun}, tw={triwulan}, komoditas={komoditas_id}"
     )
 
-    # ── Tentukan scope recalculation ──────────────────────────────────────
+    # ── Tentukan kategori DAUN yang akan dihitung ─────────────────────────
     if komoditas_id:
-        subkategori_kode = _get_kategori_kode(db, komoditas_id)
-        if not subkategori_kode:
+        subkat = _get_kategori_kode(db, komoditas_id)
+        if not subkat:
             result.errors.append(f"Komoditas ID={komoditas_id} tidak ditemukan")
             result.finished_at = datetime.now()
             return result
-        subkategori_to_recalc = {subkategori_kode}
-
+        daun_to_recalc = {subkat}
     elif kategori_kode_scope:
-        # Recalculate seluruh subkategori tertentu
-        subkategori_to_recalc = {kategori_kode_scope}
-        # Tambahkan semua sub-subkategori di bawahnya
-        from app.models.kategori_pdrb import KategoriPdrb
-        children = (
-            db.query(KategoriPdrb.kode)
-            .filter(KategoriPdrb.parent_kode == kategori_kode_scope)
-            .all()
-        )
-        for (child_kode,) in children:
-            subkategori_to_recalc.add(child_kode)
-
+        # Daun di bawah scope (atau scope itu sendiri jika ia daun)
+        semua_daun = _kode_daun(db)
+        daun_to_recalc = {
+            k for k in semua_daun
+            if k == kategori_kode_scope or k.startswith(kategori_kode_scope + ".")
+        }
+        if not daun_to_recalc:
+            daun_to_recalc = {kategori_kode_scope}
     else:
-        # Recalculate SEMUA subkategori di wilayah ini
-        from app.models.kategori_pdrb import KategoriPdrb
-        subkategori_to_recalc = set(
-            kode
-            for (kode,) in db.query(KategoriPdrb.kode)
-            .filter(KategoriPdrb.level >= 3)  # level 3 = sub-subkategori yang punya komoditas
-            .all()
-        )
-        if not subkategori_to_recalc:
-            # Fallback ke level 2
-            subkategori_to_recalc = set(
-                kode
-                for (kode,) in db.query(KategoriPdrb.kode)
-                .filter(KategoriPdrb.level == 2)
-                .all()
-            )
+        daun_to_recalc = _kode_daun(db)   # [FIX-1a] semua daun, termasuk level-1
 
-    # ── Step 1: Recalculate setiap komoditas dalam scope ─────────────────
-    for subkat_kode in subkategori_to_recalc:
+    # ── Step 1: Recalculate komoditas (untuk daun berbasis produksi) ──────
+    for daun in daun_to_recalc:
+        if not _punya_komoditas(db, daun):
+            continue
         komoditas_list = (
             db.query(Komoditas)
-            .filter(Komoditas.kategori_kode == subkat_kode, Komoditas.aktif.is_(True))
+            .filter(Komoditas.kategori_kode == daun, Komoditas.aktif.is_(True))
             .all()
         )
         for kom in komoditas_list:
             if komoditas_id and kom.id != komoditas_id:
-                continue   # Jika trigger spesifik komoditas, skip yang lain
-
-            _invalidate_lk_hasil(db, kom.id, wilayah_kode, tahun, triwulan)
+                continue
             h = hitung_output_komoditas(db, kom.id, wilayah_kode, tahun, triwulan)
             if h.error:
                 result.warnings.append(h.error)
-                logger.warning(f"[CASCADE] Komoditas {kom.id}: {h.error}")
                 continue
-
             simpan_lk_hasil(db, kom.id, wilayah_kode, tahun, triwulan, h, flush=False)
             result.komoditas_affected.append(kom.id)
-
     db.flush()
-    logger.info(f"[CASCADE] Step 1 selesai: {len(result.komoditas_affected)} komoditas")
 
-    # ── Step 2: Recalculate subkategori (agregasi komoditas) ─────────────
-    for subkat_kode in subkategori_to_recalc:
-        _invalidate_pdrb_rekap(db, subkat_kode, wilayah_kode, tahun, triwulan)
-        h_sub = hitung_subkategori(db, subkat_kode, wilayah_kode, tahun, triwulan)
-        for w in h_sub.peringatan:
-            result.warnings.append(w)
+    # ── Step 2: Recalculate tiap daun dengan DISPATCH METODE ──────────────
+    for daun in daun_to_recalc:
+        _invalidate_pdrb_rekap_indikator(db, daun, wilayah_kode, tahun, triwulan)
+        metode = _resolve_metode(db, daun)
 
-        simpan_rekap_dari_hasil(db, h_sub, flush=False)
-        result.subkategori_affected.append(subkat_kode)
+        if _punya_komoditas(db, daun):
+            # Produksi/Revaluasi — berbasis komoditas
+            h_sub = hitung_subkategori(db, daun, wilayah_kode, tahun, triwulan)
+            for w in h_sub.peringatan:
+                result.warnings.append(w)
+            simpan_rekap_dari_hasil(db, h_sub, flush=False)
 
+        elif metode in METODE_LANGSUNG:
+            # [FIX-1b] NTB diinput langsung → biarkan apa adanya di pdrb_rekap.
+            exists = (
+                db.query(PdrbRekap)
+                .filter(
+                    PdrbRekap.kategori_kode == daun,
+                    PdrbRekap.wilayah_kode == wilayah_kode,
+                    PdrbRekap.tahun == tahun,
+                    PdrbRekap.triwulan == triwulan,
+                )
+                .first()
+            )
+            if not exists:
+                result.warnings.append(
+                    f"[Langsung] NTB belum diinput untuk {daun!r} {tahun} "
+                    f"(isi pdrb_rekap.ntb_adhb/ntb_adhk)"
+                )
+
+        else:
+            # Deflasi / DoubleDflasi / CommodityFlow → metode deflasi tunggal
+            h_def = hitung_kategori_deflasi(db, daun, wilayah_kode, tahun, triwulan)
+            for w in h_def.peringatan:
+                result.warnings.append(w)
+            simpan_rekap_dari_hasil(db, h_def, flush=False)
+
+        result.subkategori_affected.append(daun)
     db.flush()
-    logger.info(f"[CASCADE] Step 2 selesai: {len(result.subkategori_affected)} subkategori")
 
-    # ── Step 3: Roll-up ke kategori parent ────────────────────────────────
-    parent_kodes: set[str] = set()
-    for subkat_kode in subkategori_to_recalc:
-        for ancestor in _collect_ancestor_kodes(subkat_kode):
-            parent_kodes.add(ancestor)
+    # ── Step 3: Roll-up ke semua ancestor ─────────────────────────────────
+    parent_kodes: set = set()
+    for daun in daun_to_recalc:
+        for anc in _collect_ancestor_kodes(daun):
+            parent_kodes.add(anc)
 
     for parent_kode in sorted(parent_kodes, key=lambda x: x.count("."), reverse=True):
-        # Jumlahkan semua child yang langsung di bawah parent ini
-        from app.models.kategori_pdrb import KategoriPdrb
         children = (
             db.query(KategoriPdrb.kode)
             .filter(KategoriPdrb.parent_kode == parent_kode)
             .all()
         )
-        total_b = _sum_ntb_children(db, [k for (k,) in children], wilayah_kode, tahun, triwulan, "adhb")
-        total_k = _sum_ntb_children(db, [k for (k,) in children], wilayah_kode, tahun, triwulan, "adhk")
-
-        # Simpan rekap parent
+        child_kodes = [k for (k,) in children]
+        total_b = _sum_komponen_children(db, child_kodes, wilayah_kode, tahun, triwulan, "adhb")
+        total_k = _sum_komponen_children(db, child_kodes, wilayah_kode, tahun, triwulan, "adhk")
         _save_parent_rekap(db, parent_kode, wilayah_kode, tahun, triwulan, total_b, total_k)
         result.kategori_affected.append(parent_kode)
-
     db.flush()
 
-    # ── Step 4: Hitung indikator turunan ─────────────────────────────────
-    all_affected = list(subkategori_to_recalc) + list(parent_kodes)
+    # ── Step 4: Indikator turunan (semua daun + parent) ───────────────────
+    all_affected = list(daun_to_recalc) + list(parent_kodes)
     for kode in all_affected:
         hitung_indikator_turunan(db, kode, wilayah_kode, tahun, triwulan)
 
-    # ── Step 5: Agregasi tahunan jika ada triwulan ────────────────────────
+    # ── Step 5: Agregasi tahunan bila triwulanan ──────────────────────────
     if triwulan is not None:
         for kode in all_affected:
             agregasi_tahunan(db, kode, wilayah_kode, tahun)
 
-    # ── Step 6: Jika kabupaten/kota, recalculate provinsi (65) ───────────
+    # ── Step 6: Roll-up provinsi (65) dari kab/kota ───────────────────────
     if wilayah_kode != KODE_PROVINSI:
-        _recalculate_provinsi_agregat(db, tahun, triwulan, parent_kodes | subkategori_to_recalc)
+        _recalculate_provinsi_agregat(db, tahun, triwulan, parent_kodes | daun_to_recalc)
 
     db.commit()
     result.finished_at = datetime.now()
     logger.info(
-        f"[CASCADE] Selesai dalam {result.duration_seconds:.2f}s. "
+        f"[CASCADE] Selesai {result.duration_seconds:.2f}s. "
         f"Komoditas={len(result.komoditas_affected)}, "
-        f"Subkategori={len(result.subkategori_affected)}, "
-        f"Parent={len(result.kategori_affected)}"
+        f"Daun={len(result.subkategori_affected)}, Parent={len(result.kategori_affected)}"
     )
     return result
 
 
-def _sum_ntb_children(
-    db: Session, child_kodes: list[str], wilayah_kode: str,
+def _sum_komponen_children(
+    db: Session, child_kodes: list, wilayah_kode: str,
     tahun: int, triwulan: Optional[int], mode: str,
 ) -> dict:
-    """Sum NTB dan komponen dari semua child rekap untuk roll-up ke parent."""
     from decimal import Decimal as D
     totals = {
         "output_primer": D(0), "output_sekunder": D(0), "output_lainnya": D(0),
@@ -344,10 +336,8 @@ def _sum_ntb_children(
 
 def _save_parent_rekap(
     db: Session, parent_kode: str, wilayah_kode: str,
-    tahun: int, triwulan: Optional[int],
-    totals_b: dict, totals_k: dict,
+    tahun: int, triwulan: Optional[int], totals_b: dict, totals_k: dict,
 ) -> None:
-    """Simpan roll-up rekap untuk kategori parent."""
     from app.services.kalkulasi_service import _round6
 
     row = (
@@ -376,14 +366,17 @@ def _save_parent_rekap(
 
 
 def _recalculate_provinsi_agregat(
-    db: Session, tahun: int, triwulan: Optional[int], kategori_kodes: set[str],
+    db: Session, tahun: int, triwulan: Optional[int], kategori_kodes: set,
 ) -> None:
-    """
-    Rekap provinsi (65) = SUM semua kabupaten/kota untuk kategori yang terdampak.
-    """
     from app.services.kalkulasi_service import _round6
     from decimal import Decimal
 
+    komponen = [
+        "output_primer_adhb", "output_sekunder_adhb", "output_lainnya_adhb",
+        "output_total_adhb", "ka_adhb", "ntb_adhb",
+        "output_primer_adhk", "output_sekunder_adhk", "output_lainnya_adhk",
+        "output_total_adhk", "ka_adhk", "ntb_adhk",
+    ]
     for kat_kode in kategori_kodes:
         kabkota_rows = (
             db.query(PdrbRekap)
@@ -398,12 +391,6 @@ def _recalculate_provinsi_agregat(
         if not kabkota_rows:
             continue
 
-        komponen = [
-            "output_primer_adhb", "output_sekunder_adhb", "output_lainnya_adhb",
-            "output_total_adhb", "ka_adhb", "ntb_adhb",
-            "output_primer_adhk", "output_sekunder_adhk", "output_lainnya_adhk",
-            "output_total_adhk", "ka_adhk", "ntb_adhk",
-        ]
         totals = {k: Decimal(0) for k in komponen}
         for r in kabkota_rows:
             for k in komponen:
@@ -435,32 +422,24 @@ def _recalculate_provinsi_agregat(
     db.flush()
 
 
-def _publish_cascade_sse(
-    task_id: str,
-    event_type: str,
-    result: Optional[CascadeResult] = None,
-    **extra,
-) -> None:
-    """
-    Push event ke SSE in-memory queue.
-    Dipanggil setelah cascade sync selesai agar S2 frontend bisa auto-refresh.
-    """
+# ─────────────────────────────────────────────────────────────────────────────
+# SSE + Celery enqueue (DIPERTAHANKAN dari versi lama — dipakai 5 router API)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _publish_cascade_sse(task_id, event_type, result=None, **extra):
+    """Push event ke SSE in-memory queue agar frontend S2 auto-refresh."""
     try:
         from app.api.input_deflator_sse import publish_cascade_event
-        payload = {
-            "task_id":  task_id,
-            "type":     event_type,
-            **extra,
-        }
+        payload = {"task_id": task_id, "type": event_type, **extra}
         if result:
             payload.update({
-                "wilayah_kode":         result.wilayah_kode,
-                "tahun":                result.tahun,
-                "triwulan":             result.triwulan,
-                "komoditas_affected":   result.komoditas_affected,
+                "wilayah_kode": result.wilayah_kode,
+                "tahun": result.tahun,
+                "triwulan": result.triwulan,
+                "komoditas_affected": result.komoditas_affected,
                 "subkategori_affected": result.subkategori_affected,
-                "duration_seconds":     result.duration_seconds,
-                "errors":               result.errors,
+                "duration_seconds": result.duration_seconds,
+                "errors": result.errors,
             })
         publish_cascade_event(payload)
     except Exception as e:
@@ -468,24 +447,16 @@ def _publish_cascade_sse(
 
 
 def enqueue_cascade(
-    trigger_type: TriggerType,
-    wilayah_kode: str,
-    tahun: int,
-    triwulan: Optional[int] = None,
-    komoditas_id: Optional[int] = None,
-    kategori_kode_scope: Optional[str] = None,
-) -> str:
+    trigger_type, wilayah_kode, tahun, triwulan=None,
+    komoditas_id=None, kategori_kode_scope=None,
+):
     """
-    Kirim recalculate_cascade ke antrian Celery (async).
-    Kembalikan task_id untuk status tracking via SSE/WebSocket.
-
-    Jika Celery tidak tersedia, jalankan synchronous sebagai fallback.
-    Setelah selesai, publish event ke SSE queue agar S2 frontend auto-refresh.
+    Kirim recalculate ke Celery (async). Jika Celery tak tersedia → jalankan
+    synchronous di background thread. Kembalikan task_id untuk tracking SSE.
     """
     import uuid
     task_id = str(uuid.uuid4())
 
-    # Publish 'start' event
     _publish_cascade_sse(task_id, "cascade_start", trigger_type=trigger_type,
                          wilayah_kode=wilayah_kode, tahun=tahun, triwulan=triwulan)
 
@@ -494,44 +465,33 @@ def enqueue_cascade(
         celery_task = celery_app.send_task(
             "app.tasks.cascade_task",
             kwargs={
-                "trigger_type": trigger_type,
-                "wilayah_kode": wilayah_kode,
-                "tahun": tahun,
-                "triwulan": triwulan,
-                "komoditas_id": komoditas_id,
-                "kategori_kode_scope": kategori_kode_scope,
-                "task_id": task_id,
+                "trigger_type": trigger_type, "wilayah_kode": wilayah_kode,
+                "tahun": tahun, "triwulan": triwulan, "komoditas_id": komoditas_id,
+                "kategori_kode_scope": kategori_kode_scope, "task_id": task_id,
             },
         )
         logger.info(f"[CASCADE] Task di-enqueue: {celery_task.id}")
         return celery_task.id
     except ImportError:
         logger.warning("[CASCADE] Celery tidak tersedia, menjalankan synchronous")
-        # Buat session baru untuk fallback sync
         from app.database import SessionLocal
         import threading
 
         def _run_sync():
             db = SessionLocal()
             try:
-                result = sync_recalculate(
+                res = sync_recalculate(
                     db, trigger_type, wilayah_kode, tahun, triwulan,
-                    komoditas_id=komoditas_id,
-                    kategori_kode_scope=kategori_kode_scope,
+                    komoditas_id=komoditas_id, kategori_kode_scope=kategori_kode_scope,
                 )
-                if result.errors:
-                    _publish_cascade_sse(task_id, "cascade_error", result=result)
-                else:
-                    _publish_cascade_sse(task_id, "cascade_done", result=result)
+                _publish_cascade_sse(
+                    task_id, "cascade_error" if res.errors else "cascade_done", result=res
+                )
             except Exception as e:
                 logger.error(f"[CASCADE] Sync error: {e}", exc_info=True)
-                _publish_cascade_sse(task_id, "cascade_error",
-                                     error=str(e), task_id=task_id)
+                _publish_cascade_sse(task_id, "cascade_error", error=str(e), task_id=task_id)
             finally:
                 db.close()
 
-        # Jalankan di background thread agar tidak blocking HTTP response
-        t = threading.Thread(target=_run_sync, daemon=True)
-        t.start()
-
+        threading.Thread(target=_run_sync, daemon=True).start()
         return task_id
