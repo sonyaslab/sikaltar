@@ -139,7 +139,15 @@ class PdrbRekap(Base):
     )
     output_total_adhb: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     ka_adhb: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
-    ntb_adhb: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    ntb_sebelum_adj_adhb: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, comment="NTB sebelum adjustment (Output Total - KA)"
+    )
+    adjustment_adhb: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, comment="Input manual user untuk penyesuaian NTB (+/-)"
+    )
+    ntb_adhb: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, comment="NTB Final = ntb_sebelum_adj_adhb + adjustment_adhb"
+    )
 
     # ── Output ADHK ──────────────────────────────────────────────────
     output_primer_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
@@ -147,7 +155,15 @@ class PdrbRekap(Base):
     output_lainnya_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     output_total_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     ka_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
-    ntb_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
+    ntb_sebelum_adj_adhk: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, comment="NTB sebelum adjustment (Output Total - KA)"
+    )
+    adjustment_adhk: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, comment="Input manual user untuk penyesuaian NTB (+/-)"
+    )
+    ntb_adhk: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, comment="NTB Final = ntb_sebelum_adj_adhk + adjustment_adhk"
+    )
 
     # ── Indikator Turunan ─────────────────────────────────────────────
     distribusi_pct: Mapped[Decimal | None] = mapped_column(

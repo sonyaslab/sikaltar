@@ -1,5 +1,5 @@
 """
-Models: InputProduksi, InputHarga, InputIndeksDeflator
+Models: InputProduksi, InputHarga, InputIndeksDeflator, InputIHP
 Tabel input data dari petugas BPS.
 """
 from __future__ import annotations
@@ -167,4 +167,55 @@ class InputIndeksDeflator(Base):
         return (
             f"<InputIndeksDeflator kategori={self.kategori_kode!r} wilayah={self.wilayah_kode!r} "
             f"tahun={self.tahun} tw={self.triwulan} indeks={self.nilai_indeks}>"
+        )
+
+
+class InputIHP(Base):
+    """
+    Indeks Harga Produksi (IHP) per subkategori/komoditas per periode.
+    Basis: tahun 2010 = 100.
+    Digunakan untuk menghitung harga ADHB jika harga langsung tidak tersedia:
+      harga_berlaku_t = harga_konstan_2010 × (IHP_t / 100)
+    """
+    __tablename__ = "input_ihp"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    kategori_kode: Mapped[str] = mapped_column(
+        String(10), ForeignKey("kategori_pdrb.kode", ondelete="RESTRICT"),
+        nullable=False, index=True,
+    )
+    komoditas_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("komoditas.id", ondelete="RESTRICT"),
+        nullable=True, index=True,
+        comment="NULL jika berlaku untuk semua komoditas dalam subkategori",
+    )
+    wilayah_kode: Mapped[str] = mapped_column(
+        String(10), ForeignKey("wilayah.kode", ondelete="RESTRICT"),
+        nullable=False, index=True,
+    )
+    tahun: Mapped[int] = mapped_column(Integer, nullable=False)
+    triwulan: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    nilai_indeks: Mapped[Decimal] = mapped_column(
+        Numeric(10, 4), nullable=False,
+        comment="Indeks dengan basis 100 pada tahun 2010",
+    )
+    sumber_data: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        # Gunakan kombinasi kategori_kode dan komoditas_id untuk uniqueness, tapi karena SQLite
+        # NULL != NULL in unique constraint for some versions, it's a bit tricky. We'll use a standard constraint
+        # that allows multiple NULLs in komoditas_id depending on DB engine.
+        UniqueConstraint("kategori_kode", "komoditas_id", "wilayah_kode", "tahun", "triwulan",
+                         name="uq_input_ihp"),
+        CheckConstraint("triwulan IN (1,2,3,4) OR triwulan IS NULL",
+                         name="ck_ihp_triwulan"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<InputIHP kategori={self.kategori_kode!r} komoditas={self.komoditas_id} "
+            f"wilayah={self.wilayah_kode!r} tahun={self.tahun} tw={self.triwulan} indeks={self.nilai_indeks}>"
         )

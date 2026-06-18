@@ -23,7 +23,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.input_data import InputHarga, InputIndeksDeflator, InputProduksi
+from app.models.input_data import InputHarga, InputIndeksDeflator, InputProduksi, InputIHP
 from app.models.komoditas import Komoditas
 from app.models.hasil import LkHasil
 from app.services.rasio_service import get_rasio, get_rasio_safe, RasioTidakDitemukanError
@@ -75,6 +75,7 @@ class HasilSubkategori:
     output_total_adhb: Decimal = Decimal(0)
     rasio_ka_adhb: Decimal = Decimal(0)
     ka_adhb: Decimal = Decimal(0)
+    ntb_sebelum_adj_adhb: Decimal = Decimal(0)
     ntb_adhb: Decimal = Decimal(0)
 
     # ADHK
@@ -84,6 +85,7 @@ class HasilSubkategori:
     output_total_adhk: Decimal = Decimal(0)
     rasio_ka_adhk: Decimal = Decimal(0)
     ka_adhk: Decimal = Decimal(0)
+    ntb_sebelum_adj_adhk: Decimal = Decimal(0)
     ntb_adhk: Decimal = Decimal(0)
 
     # [FIX-3] Pelacakan kelengkapan data
@@ -137,6 +139,57 @@ def _get_harga_berlaku(
     # [FIX-7] Fallback ke harga provinsi 65 bila kabupaten kosong
     if wilayah_kode != "65":
         return _get_harga_berlaku(db, komoditas_id, "65", tahun, triwulan)
+
+    return None
+
+def _get_ihp(
+    db: Session, kategori_kode: str, komoditas_id: int, wilayah_kode: str, tahun: int, triwulan: Optional[int]
+) -> Optional[Decimal]:
+    """Cari IHP untuk komoditas, fallback ke IHP kategori, fallback ke IHP provinsi."""
+    # 1. Cari spesifik komoditas
+    row = db.query(InputIHP).filter(
+        InputIHP.komoditas_id == komoditas_id,
+        InputIHP.wilayah_kode == wilayah_kode,
+        InputIHP.tahun == tahun,
+        InputIHP.triwulan == triwulan,
+    ).first()
+
+    # 2. Cari tingkat kategori (komoditas_id is None)
+    if not row:
+        row = db.query(InputIHP).filter(
+            InputIHP.kategori_kode == kategori_kode,
+            InputIHP.komoditas_id.is_(None),
+            InputIHP.wilayah_kode == wilayah_kode,
+            InputIHP.tahun == tahun,
+            InputIHP.triwulan == triwulan,
+        ).first()
+
+    if row and row.nilai_indeks:
+        return Decimal(str(row.nilai_indeks))
+
+    # 3. Fallback ke triwulan NULL (tahunan)
+    if triwulan is not None:
+        row = db.query(InputIHP).filter(
+            InputIHP.komoditas_id == komoditas_id,
+            InputIHP.wilayah_kode == wilayah_kode,
+            InputIHP.tahun == tahun,
+            InputIHP.triwulan.is_(None),
+        ).first()
+        if not row:
+            row = db.query(InputIHP).filter(
+                InputIHP.kategori_kode == kategori_kode,
+                InputIHP.komoditas_id.is_(None),
+                InputIHP.wilayah_kode == wilayah_kode,
+                InputIHP.tahun == tahun,
+                InputIHP.triwulan.is_(None),
+            ).first()
+        if row and row.nilai_indeks:
+            return Decimal(str(row.nilai_indeks))
+
+    # 4. Fallback ke provinsi 65
+    if wilayah_kode != "65":
+        return _get_ihp(db, kategori_kode, komoditas_id, "65", tahun, triwulan)
+
     return None
 
 
@@ -233,10 +286,27 @@ def hitung_output_komoditas(
         kuantum = kuantum * Decimal(str(komoditas.faktor_konversi))
 
     # ── ADHB ──────────────────────────────────────────────────────────────
-    harga_b = _get_harga_berlaku(db, komoditas_id, wilayah_kode, tahun, triwulan)
+    # Tentukan Harga Berlaku
+    harga_b = None
+    if komoditas.metode_harga == 'IHP':
+        # Wajib pakai IHP
+        ihp_t = _get_ihp(db, kategori_kode, komoditas_id, wilayah_kode, tahun, triwulan)
+        harga_k = _get_harga_konstan(db, komoditas_id, wilayah_kode)
+        if ihp_t is not None and harga_k is not None:
+            harga_b = _round6(harga_k * (ihp_t / Decimal(100)))
+    else:
+        # Cari harga langsung
+        harga_b = _get_harga_berlaku(db, komoditas_id, wilayah_kode, tahun, triwulan)
+        # Fallback ke IHP jika harga langsung kosong
+        if harga_b is None:
+            ihp_t = _get_ihp(db, kategori_kode, komoditas_id, wilayah_kode, tahun, triwulan)
+            harga_k = _get_harga_konstan(db, komoditas_id, wilayah_kode)
+            if ihp_t is not None and harga_k is not None:
+                harga_b = _round6(harga_k * (ihp_t / Decimal(100)))
+
     if harga_b is None:
         hasil.error = (
-            f"Harga berlaku tidak tersedia: komoditas={komoditas_id}, "
+            f"Harga berlaku / IHP tidak tersedia: komoditas={komoditas_id}, "
             f"wilayah={wilayah_kode}, tahun={tahun}"
         )
         return hasil
@@ -323,6 +393,20 @@ def hitung_subkategori(
         triwulan=triwulan,
     )
 
+    from app.models.hasil import PdrbRekap
+    rekap = (
+        db.query(PdrbRekap)
+        .filter(
+            PdrbRekap.kategori_kode == subkategori_kode,
+            PdrbRekap.wilayah_kode == wilayah_kode,
+            PdrbRekap.tahun == tahun,
+            PdrbRekap.triwulan == triwulan,
+        )
+        .first()
+    )
+    adj_adhb_manual = Decimal(str(rekap.adjustment_adhb)) if rekap and rekap.adjustment_adhb else Decimal(0)
+    adj_adhk_manual = Decimal(str(rekap.adjustment_adhk)) if rekap and rekap.adjustment_adhk else Decimal(0)
+
     komoditas_list = (
         db.query(Komoditas)
         .filter(Komoditas.kategori_kode == subkategori_kode, Komoditas.aktif.is_(True))
@@ -362,54 +446,51 @@ def hitung_subkategori(
                                 default=Decimal(0))
 
     try:
-        rasio_adj_b = get_rasio(db, "ADJ", "ADHB", tahun,
-                                kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
-    except RasioTidakDitemukanError:
-        rasio_adj_b = Decimal(0)
-        hasil.peringatan.append(f"Rasio ADJ ADHB tidak ditemukan untuk {subkategori_kode!r} {tahun}")
-
-    try:
         rasio_ka_b = get_rasio(db, "KA", "ADHB", tahun,
                                kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode)
     except RasioTidakDitemukanError:
         rasio_ka_b = Decimal(0)
         hasil.peringatan.append(f"Rasio KA ADHB tidak ditemukan untuk {subkategori_kode!r} {tahun}")
 
+    # Adjustment didapat dari manual input (tidak lagi pakai rasio ADJ)
+    adj_b = adj_adhb_manual
     os_b = _round6(total_primer_b * rasio_os_b)
-    adj_b = _round6(total_primer_b * rasio_adj_b)
-    total_b = _round6(total_primer_b + os_b + adj_b)
+    total_b = _round6(total_primer_b + os_b) # Tidak ditambah adj dulu karena adj dilakukan setelah NTB
     ka_b = _round6(total_b * rasio_ka_b)
+    ntb_sebelum_adj_b = _round6(total_b - ka_b)
+    ntb_final_b = _round6(ntb_sebelum_adj_b + adj_b)
 
     hasil.output_sekunder_adhb = os_b
     hasil.adj_adhb = adj_b
     hasil.output_total_adhb = total_b
     hasil.rasio_ka_adhb = rasio_ka_b
     hasil.ka_adhb = ka_b
-    hasil.ntb_adhb = _round6(total_b - ka_b)
+    hasil.ntb_sebelum_adj_adhb = ntb_sebelum_adj_b
+    hasil.ntb_adhb = ntb_final_b
 
     # ── ADHK: rasio tahun dasar 2010 ──────────────────────────────────────
     rasio_os_k = get_rasio_safe(db, "OS_SEK", "ADHK", TAHUN_DASAR,
                                 kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
                                 default=Decimal(0))
 
-    rasio_adj_k = get_rasio_safe(db, "ADJ", "ADHK", TAHUN_DASAR,
-                                 kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
-                                 default=Decimal(0))
     rasio_ka_k = get_rasio_safe(db, "KA", "ADHK", TAHUN_DASAR,
                                 kategori_kode=subkategori_kode, wilayah_kode=wilayah_kode,
                                 default=Decimal(0))
 
     os_k = _round6(total_primer_k * rasio_os_k)
-    adj_k = _round6(total_primer_k * rasio_adj_k)
-    total_k = _round6(total_primer_k + os_k + adj_k)
+    adj_k = adj_adhk_manual
+    total_k = _round6(total_primer_k + os_k)
     ka_k = _round6(total_k * rasio_ka_k)
+    ntb_sebelum_adj_k = _round6(total_k - ka_k)
+    ntb_final_k = _round6(ntb_sebelum_adj_k + adj_k)
 
     hasil.output_sekunder_adhk = os_k
     hasil.adj_adhk = adj_k
     hasil.output_total_adhk = total_k
     hasil.rasio_ka_adhk = rasio_ka_k
     hasil.ka_adhk = ka_k
-    hasil.ntb_adhk = _round6(total_k - ka_k)
+    hasil.ntb_sebelum_adj_adhk = ntb_sebelum_adj_k
+    hasil.ntb_adhk = ntb_final_k
 
     return hasil
 
@@ -494,27 +575,38 @@ def hitung_kategori_deflasi(
             )
             return hasil
 
+    adj_adhb_manual = Decimal(str(rekap.adjustment_adhb)) if rekap and rekap.adjustment_adhb else Decimal(0)
+    adj_adhk_manual = Decimal(str(rekap.adjustment_adhk)) if rekap and rekap.adjustment_adhk else Decimal(0)
+
     output_total_adhk = _round6(output_total_adhb / (indeks / Decimal(100)))
 
     rasio_ka_b = get_rasio_safe(db, "KA", "ADHB", tahun, kategori_kode=kategori_kode,
                                 wilayah_kode=wilayah_kode, default=Decimal(0))
     ka_b = _round6(output_total_adhb * rasio_ka_b)
+    ntb_sebelum_adj_b = _round6(output_total_adhb - ka_b)
+    ntb_final_b = _round6(ntb_sebelum_adj_b + adj_adhb_manual)
 
     rasio_ka_k = get_rasio_safe(db, "KA", "ADHK", TAHUN_DASAR, kategori_kode=kategori_kode,
                                 wilayah_kode=wilayah_kode, default=Decimal(0))
     ka_k = _round6(output_total_adhk * rasio_ka_k)
+    ntb_sebelum_adj_k = _round6(output_total_adhk - ka_k)
+    ntb_final_k = _round6(ntb_sebelum_adj_k + adj_adhk_manual)
 
     hasil.output_primer_adhb = output_total_adhb
     hasil.output_total_adhb = output_total_adhb
     hasil.rasio_ka_adhb = rasio_ka_b
     hasil.ka_adhb = ka_b
-    hasil.ntb_adhb = _round6(output_total_adhb - ka_b)
+    hasil.adj_adhb = adj_adhb_manual
+    hasil.ntb_sebelum_adj_adhb = ntb_sebelum_adj_b
+    hasil.ntb_adhb = ntb_final_b
 
     hasil.output_primer_adhk = output_total_adhk
     hasil.output_total_adhk = output_total_adhk
     hasil.rasio_ka_adhk = rasio_ka_k
     hasil.ka_adhk = ka_k
-    hasil.ntb_adhk = _round6(output_total_adhk - ka_k)
+    hasil.adj_adhk = adj_adhk_manual
+    hasil.ntb_sebelum_adj_adhk = ntb_sebelum_adj_k
+    hasil.ntb_adhk = ntb_final_k
 
     return hasil
 

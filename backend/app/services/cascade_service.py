@@ -41,7 +41,7 @@ from app.services.agregasi_service import (
 
 logger = logging.getLogger(__name__)
 
-TriggerType = Literal["produksi", "harga", "deflator", "rasio_override"]
+TriggerType = Literal["produksi", "harga", "deflator", "rasio_override", "ihp", "adjustment"]
 
 KODE_PROVINSI = "65"
 KODE_KABKOTA = ["6501", "6502", "6503", "6504", "6571"]
@@ -312,7 +312,8 @@ def _sum_komponen_children(
     from decimal import Decimal as D
     totals = {
         "output_primer": D(0), "output_sekunder": D(0), "output_lainnya": D(0),
-        "output_total": D(0), "ka": D(0), "ntb": D(0),
+        "output_total": D(0), "ka": D(0), "ntb_sebelum_adj": D(0), 
+        "adjustment": D(0), "ntb": D(0),
     }
     suffix = "_adhb" if mode == "adhb" else "_adhk"
     for kode in child_kodes:
@@ -373,9 +374,9 @@ def _recalculate_provinsi_agregat(
 
     komponen = [
         "output_primer_adhb", "output_sekunder_adhb", "output_lainnya_adhb",
-        "output_total_adhb", "ka_adhb", "ntb_adhb",
+        "output_total_adhb", "ka_adhb", "ntb_sebelum_adj_adhb", "adjustment_adhb", "ntb_adhb",
         "output_primer_adhk", "output_sekunder_adhk", "output_lainnya_adhk",
-        "output_total_adhk", "ka_adhk", "ntb_adhk",
+        "output_total_adhk", "ka_adhk", "ntb_sebelum_adj_adhk", "adjustment_adhk", "ntb_adhk",
     ]
     for kat_kode in kategori_kodes:
         kabkota_rows = (

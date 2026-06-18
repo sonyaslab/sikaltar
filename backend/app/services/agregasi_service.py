@@ -72,9 +72,9 @@ def agregasi_tahunan(
     # Inisialisasi akumulator
     komponen = [
         "output_primer_adhb", "output_sekunder_adhb", "output_lainnya_adhb",
-        "output_total_adhb", "ka_adhb", "ntb_adhb",
+        "output_total_adhb", "ka_adhb", "ntb_sebelum_adj_adhb", "adjustment_adhb", "ntb_adhb",
         "output_primer_adhk", "output_sekunder_adhk", "output_lainnya_adhk",
-        "output_total_adhk", "ka_adhk", "ntb_adhk",
+        "output_total_adhk", "ka_adhk", "ntb_sebelum_adj_adhk", "adjustment_adhk", "ntb_adhk",
     ]
     totals = {k: Decimal(0) for k in komponen}
 
@@ -143,16 +143,20 @@ def simpan_rekap_dari_hasil(
 
     row.output_primer_adhb = hasil.output_primer_adhb
     row.output_sekunder_adhb = hasil.output_sekunder_adhb
-    row.output_lainnya_adhb = hasil.adj_adhb   # ADJ masuk ke "lainnya"
+    row.output_lainnya_adhb = Decimal(0)   # Dikosongkan karena tidak ada ADJ rasio
     row.output_total_adhb = hasil.output_total_adhb
     row.ka_adhb = hasil.ka_adhb
+    row.ntb_sebelum_adj_adhb = hasil.ntb_sebelum_adj_adhb
+    row.adjustment_adhb = hasil.adj_adhb
     row.ntb_adhb = hasil.ntb_adhb
 
     row.output_primer_adhk = hasil.output_primer_adhk
     row.output_sekunder_adhk = hasil.output_sekunder_adhk
-    row.output_lainnya_adhk = hasil.adj_adhk
+    row.output_lainnya_adhk = Decimal(0)
     row.output_total_adhk = hasil.output_total_adhk
     row.ka_adhk = hasil.ka_adhk
+    row.ntb_sebelum_adj_adhk = hasil.ntb_sebelum_adj_adhk
+    row.adjustment_adhk = hasil.adj_adhk
     row.ntb_adhk = hasil.ntb_adhk
     row.calculated_at = datetime.now()
 

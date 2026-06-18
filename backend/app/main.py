@@ -71,6 +71,8 @@ def health_check():
 # ─── API Routers ──────────────────────────────────────────────────────────────
 from app.api.referensi import router as referensi_router          # noqa: E402
 from app.api.input_harga import router as harga_router             # noqa: E402
+from app.api.input_ihp import router as ihp_router                 # noqa: E402
+from app.api.input_adjustment import router as adjustment_router   # noqa: E402
 from app.api.input_produksi import router as produksi_router       # noqa: E402
 from app.api.input_rasio import router as rasio_router             # noqa: E402
 from app.api.input_deflator_sse import deflator_router, sse_router # noqa: E402
@@ -97,6 +99,10 @@ _auth_dep = [Depends(require_operator_or_admin)]
 app.include_router(referensi_router, prefix="/api", tags=["Referensi"],
                    dependencies=_auth_dep)
 app.include_router(harga_router, prefix="/api/input/harga", tags=["S1.H — Harga"],
+                   dependencies=_auth_dep)
+app.include_router(ihp_router, prefix="/api/input/ihp", tags=["S1.IHP — Indeks Harga Produksi"],
+                   dependencies=_auth_dep)
+app.include_router(adjustment_router, prefix="/api/input/adjustment", tags=["Adjustment Manual"],
                    dependencies=_auth_dep)
 app.include_router(produksi_router, prefix="/api/input/produksi", tags=["S1.P — Produksi"],
                    dependencies=_auth_dep)
