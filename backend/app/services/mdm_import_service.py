@@ -176,7 +176,7 @@ def apply_import(
     if apply_changed:
         for item in diff_result.get('changed', []):
             try:
-                kom = db.query(Komoditas).get(item['id'])
+                kom = db.get(Komoditas, item['id'])
                 if not kom:
                     continue
                 for diff in item['diffs']:

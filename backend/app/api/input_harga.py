@@ -1,7 +1,6 @@
 """API Router — Input Harga (S1.H)."""
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query

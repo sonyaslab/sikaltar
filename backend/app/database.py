@@ -1,4 +1,4 @@
-﻿"""
+"""
 SIKALTARA — Database Connection & Session Management
 PostgreSQL + SQLAlchemy 2.x
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 from typing import Generator
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from dotenv import load_dotenv
 
@@ -37,7 +37,6 @@ SessionLocal = sessionmaker(
 
 class Base(DeclarativeBase):
     """Base class untuk semua model SQLAlchemy."""
-    #pass
     __allow_unmapped__ = True
 
 

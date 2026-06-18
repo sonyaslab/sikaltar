@@ -6,10 +6,12 @@
 
 const MDM_BASE = '/api/mdm';
 
-// Shared auth header (simple admin header for now)
+// Shared auth header — JWT Bearer token from localStorage (same as api.js)
 function _mdmHeaders(extra = {}) {
+  const token = localStorage.getItem('sikaltar_token');
   return {
     'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     'X-MDM-User': sessionStorage.getItem('mdm_user') || 'Admin',
     ...extra,
   };
@@ -17,6 +19,15 @@ function _mdmHeaders(extra = {}) {
 
 async function _mdmFetch(url, opts = {}) {
   const res = await fetch(url, { headers: _mdmHeaders(), ...opts });
+  // Token expired / invalid → redirect ke login (same as api.js)
+  if (res.status === 401) {
+    localStorage.removeItem('sikaltar_token');
+    localStorage.removeItem('sikaltar_role');
+    localStorage.removeItem('sikaltar_wilayah');
+    localStorage.removeItem('sikaltar_nama');
+    window.location.href = '/app/login.html';
+    return;
+  }
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try { const j = await res.json(); msg = j.detail || msg; } catch {}

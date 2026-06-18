@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import Optional, Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, UploadFile, File
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -294,20 +294,10 @@ async def apply_import(
     db: Session = Depends(get_db),
 ):
     try:
-        from app.services.mdm_import_service import apply_import as _apply
-
         diff_result = payload.get('diff')
         apply_new = payload.get('apply_new', True)
         apply_changed = payload.get('apply_changed', True)
         kategori_kode = payload.get('kategori_kode')
-
-        # Override log actions to 'IMPORT'
-        # We need to modify mdm_import_service or pass aksi='IMPORT'
-        # For now, let's assume we use a modified apply_import that accepts aksi
-
-        # Actually mdm_import_service's apply_import calls log_insert/log_update.
-        # We modified mdm_audit_service to accept 'aksi'.
-        # We should update mdm_import_service.apply_import to use aksi='IMPORT'.
 
         result = _apply_master(db, diff_result, user_nama, kategori_kode, apply_new, apply_changed)
         db.commit()

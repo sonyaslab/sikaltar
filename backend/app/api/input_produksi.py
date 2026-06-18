@@ -1,7 +1,6 @@
 """API Router — Input Produksi (S1.P)."""
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

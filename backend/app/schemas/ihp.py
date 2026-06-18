@@ -16,8 +16,7 @@ class InputIHPBase(BaseModel):
 class InputIHPRead(InputIHPBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class InputIHPPatch(BaseModel):

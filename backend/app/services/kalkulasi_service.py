@@ -554,18 +554,18 @@ def hitung_kategori_deflasi(
         return hasil
 
     # Output ADHB: dari argumen, atau dari pdrb_rekap (input langsung user)
-    if output_total_adhb is None:
-        from app.models.hasil import PdrbRekap
-        rekap = (
-            db.query(PdrbRekap)
-            .filter(
-                PdrbRekap.kategori_kode == kategori_kode,
-                PdrbRekap.wilayah_kode == wilayah_kode,
-                PdrbRekap.tahun == tahun,
-                PdrbRekap.triwulan == triwulan,
-            )
-            .first()
+    from app.models.hasil import PdrbRekap
+    rekap = (
+        db.query(PdrbRekap)
+        .filter(
+            PdrbRekap.kategori_kode == kategori_kode,
+            PdrbRekap.wilayah_kode == wilayah_kode,
+            PdrbRekap.tahun == tahun,
+            PdrbRekap.triwulan == triwulan,
         )
+        .first()
+    )
+    if output_total_adhb is None:
         if rekap and rekap.output_total_adhb:
             output_total_adhb = Decimal(str(rekap.output_total_adhb))
         else:
