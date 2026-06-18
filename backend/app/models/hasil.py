@@ -1,8 +1,9 @@
+# File: app/models/hasil.py
+# TAMBAHKAN kolom ini di class PdrbRekap (sudah ada di kode Anda, tapi pastikan urutannya benar):
+
 """
 Models: LkHasil & PdrbRekap
 Cache hasil perhitungan LK PDRB.
-LkHasil: per komoditas (granular).
-PdrbRekap: agregat per kategori (untuk laporan dan dashboard).
 """
 from __future__ import annotations
 
@@ -21,8 +22,6 @@ from app.database import Base
 class LkHasil(Base):
     """
     Cache hasil perhitungan per komoditas.
-    Diperbarui otomatis oleh recalculate_cascade().
-    Kolom is_valid=False jika data input sudah berubah tapi belum di-recalculate.
     """
     __tablename__ = "lk_hasil"
 
@@ -115,7 +114,7 @@ class LkHasil(Base):
 class PdrbRekap(Base):
     """
     Rekap agregat PDRB per kategori — sumber data untuk tabel publikasi BPS.
-    Diisi oleh agregasi dari LkHasil + perhitungan indikator turunan.
+    SESUAI FLOWCHART: NTB_final = NTB_hitung + adjustment_manual
     """
     __tablename__ = "pdrb_rekap"
 
@@ -139,14 +138,23 @@ class PdrbRekap(Base):
     )
     output_total_adhb: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     ka_adhb: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
-    ntb_sebelum_adj_adhb: Mapped[Decimal | None] = mapped_column(
-        Numeric(20, 6), nullable=True, comment="NTB sebelum adjustment (Output Total - KA)"
+    
+    # NTB Hitung (sebelum adjustment manual)
+    ntb_hitung_adhb: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, 
+        comment="NTB sebelum adjustment manual (Output Total - KA + Output Sekunder)"
     )
-    adjustment_adhb: Mapped[Decimal | None] = mapped_column(
-        Numeric(20, 6), nullable=True, comment="Input manual user untuk penyesuaian NTB (+/-)"
+    
+    # Adjustment Manual (USER INPUT - bisa + atau -)
+    adjustment_manual_adhb: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, 
+        comment="Adjustment manual user (Juta Rp) - bisa positif atau negatif"
     )
-    ntb_adhb: Mapped[Decimal | None] = mapped_column(
-        Numeric(20, 6), nullable=True, comment="NTB Final = ntb_sebelum_adj_adhb + adjustment_adhb"
+    
+    # NTB Final (hasil akhir)
+    ntb_final_adhb: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True, 
+        comment="NTB Final = ntb_hitung_adhb + adjustment_manual_adhb"
     )
 
     # ── Output ADHK ──────────────────────────────────────────────────
@@ -155,14 +163,23 @@ class PdrbRekap(Base):
     output_lainnya_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     output_total_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
     ka_adhk: Mapped[Decimal | None] = mapped_column(Numeric(20, 6), nullable=True)
-    ntb_sebelum_adj_adhk: Mapped[Decimal | None] = mapped_column(
-        Numeric(20, 6), nullable=True, comment="NTB sebelum adjustment (Output Total - KA)"
+    
+    # NTB Hitung (sebelum adjustment manual)
+    ntb_hitung_adhk: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True,
+        comment="NTB sebelum adjustment manual (Output Total - KA + Output Sekunder)"
     )
-    adjustment_adhk: Mapped[Decimal | None] = mapped_column(
-        Numeric(20, 6), nullable=True, comment="Input manual user untuk penyesuaian NTB (+/-)"
+    
+    # Adjustment Manual (USER INPUT - bisa + atau -)
+    adjustment_manual_adhk: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True,
+        comment="Adjustment manual user (Juta Rp) - bisa positif atau negatif"
     )
-    ntb_adhk: Mapped[Decimal | None] = mapped_column(
-        Numeric(20, 6), nullable=True, comment="NTB Final = ntb_sebelum_adj_adhk + adjustment_adhk"
+    
+    # NTB Final (hasil akhir)
+    ntb_final_adhk: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 6), nullable=True,
+        comment="NTB Final = ntb_hitung_adhk + adjustment_manual_adhk"
     )
 
     # ── Indikator Turunan ─────────────────────────────────────────────
@@ -176,7 +193,7 @@ class PdrbRekap(Base):
     )
     indeks_implisit: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 4), nullable=True,
-        comment="(NTB_ADHB / NTB_ADHK) × 100 — indeks deflasi implisit",
+        comment="(NTB_Final_ADHB / NTB_Final_ADHK) × 100 — indeks deflasi implisit",
     )
     laju_implisit_pct: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 4), nullable=True,
@@ -199,5 +216,5 @@ class PdrbRekap(Base):
     def __repr__(self) -> str:
         return (
             f"<PdrbRekap kategori={self.kategori_kode!r} wilayah={self.wilayah_kode!r} "
-            f"tahun={self.tahun} tw={self.triwulan} ntb_adhb={self.ntb_adhb}>"
+            f"tahun={self.tahun} tw={self.triwulan} ntb_final_adhb={self.ntb_final_adhb}>"
         )

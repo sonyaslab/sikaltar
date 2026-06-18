@@ -89,6 +89,7 @@ from app.api.master_komoditas import router as master_komoditas_router # noqa: E
 from app.api.master_summary import router as master_summary_router # noqa: E402
 from app.routers.auth import router as auth_router                 # noqa: E402
 from app.routers.admin_users import router as admin_users_router   # noqa: E402
+from app.api.adjustment_manual import router as adjustment_manual_router  # noqa: E402
 
 # ─── Auth Router (TIDAK dilindungi — public endpoint) ────────────────────────
 app.include_router(auth_router, prefix="/auth", tags=["Autentikasi"])
@@ -142,6 +143,14 @@ app.include_router(
     prefix="/admin/users",
     tags=["Admin — Manajemen User"],
     dependencies=[Depends(require_admin)],
+)
+
+# ─── Adjustment Manual Router ───────────────────────────────────────────────
+app.include_router(
+    adjustment_manual_router,
+    prefix="/api/adjustment",
+    tags=["Adjustment Manual"],
+    dependencies=_auth_dep,
 )
 
 # ─── Frontend Static Files ────────────────────────────────────────────────────
